@@ -1,103 +1,200 @@
-import Image from "next/image";
+"use client"
 
-export default function Home() {
+import { useState, useEffect } from "react"
+import {
+  BarChart3,
+  Bell,
+  ChevronDown,
+  ChevronRight,
+  ChevronsUpDownIcon,
+  CreditCard,
+  LayoutDashboard,
+  LucideContact2,
+  Pen,
+  Pill,
+  Settings,
+  ShoppingBag,
+  Tag,
+  UserCheck2,
+  Users,
+} from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
+import { motion } from "motion/react"
+import { Header } from "@/components/sidebar"
+
+export default function Dashboard() {
+  const [expanded, setExpanded] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
+  const [active, setActive] = useState<number>(0)
+  // Check if mobile on mount and when window resizes
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 1024)
+      if (window.innerWidth < 1024) {
+        setExpanded(false)
+      } else {
+        setExpanded(true)
+      }
+    }
+
+    // Initial check
+    checkIfMobile()
+
+    // Add event listener
+    window.addEventListener("resize", checkIfMobile)
+
+    // Cleanup
+    return () => window.removeEventListener("resize", checkIfMobile)
+  }, [])
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <>
+      <div className="flex-1 flex flex-col overflow-hidden bg-transparent">
+        {/* Header */}
+       <Header/>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        {/* Content */}
+        <main className="flex-1 overflow-y-auto p-6">
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-2xl font-bold text-gray-900 mb-6">Welcome Code Astro!</h1>
+
+            <section className="mb-8">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Pharmacy Sales Results</h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <StatsCard title="Today's" value="$95.00" change="+18%" trend="up" color="bg-emerald-50" />
+                <StatsCard title="Available" value="1.457%" change="-1,9%" trend="down" color="bg-emerald-50" />
+                <StatsCard title="Expired" value="0.48%" change="This Month" trend="neutral" color="bg-red-50" />
+                <StatsCard title="Customers" value="255K" change="This Month" trend="neutral" color="bg-gray-50" />
+              </div>
+            </section>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <section>
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">Graph Report</h2>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-center">
+                      <DonutChart value={75.5} />
+                    </div>
+                  </CardContent>
+                </Card>
+              </section>
+
+              <section>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-gray-800">Total Sales Overview</h2>
+                  <div className="bg-emerald-800 text-white px-4 py-2 rounded-md font-semibold">$299.00</div>
+                </div>
+                <Card>
+                  <CardContent className="pt-6">
+                    <BarChartComponent />
+                  </CardContent>
+                </Card>
+              </section>
+            </div>
+          </div>
+        </main>
+      </div>
+      </>
+
+  )
+}
+
+function StatsCard({ title, value, change, trend, color }:any) {
+  return (
+    <motion.div
+      className={cn("rounded-lg p-4", color)}
+      whileHover={{ y: -5, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)" }}
+      transition={{ duration: 0.2 }}
+    >
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-sm font-medium text-gray-600">{title}</h3>
+        <ChevronRight className="h-4 w-4 text-gray-400" />
+      </div>
+      <p className="text-3xl font-bold text-gray-900">{value}</p>
+      <p
+        className={cn(
+          "text-sm mt-1",
+          trend === "up" ? "text-green-600" : trend === "down" ? "text-red-600" : "text-gray-500",
+        )}
+      >
+        {change}
+      </p>
+    </motion.div>
+  )
+}
+
+function DonutChart({ value }) {
+  const percentage = value / 10
+  const circumference = 2 * Math.PI * 50
+  const offset = circumference - (percentage / 100) * circumference
+
+  return (
+    <div className="relative flex items-center justify-center h-64 w-64">
+      <svg className="w-full h-full" viewBox="0 0 120 120">
+        <circle
+          className="text-emerald-100"
+          strokeWidth="12"
+          stroke="currentColor"
+          fill="transparent"
+          r="50"
+          cx="60"
+          cy="60"
+        />
+        <circle
+          className="text-emerald-500 transform -rotate-90 origin-center"
+          strokeWidth="12"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          stroke="currentColor"
+          fill="transparent"
+          r="50"
+          cx="60"
+          cy="60"
+        />
+      </svg>
+      <div className="absolute flex flex-col items-center justify-center text-center">
+        <span className="text-sm font-medium text-gray-500">Total</span>
+        <span className="text-3xl font-bold">755K</span>
+      </div>
     </div>
-  );
+  )
+}
+
+function BarChartComponent() {
+  const data = [
+    { value: 20, color: "bg-emerald-300" },
+    { value: 15, color: "bg-emerald-200" },
+    { value: 25, color: "bg-yellow-200" },
+    { value: 30, color: "bg-red-200" },
+    { value: 40, color: "bg-emerald-300" },
+    { value: 35, color: "bg-gray-200" },
+    { value: 50, color: "bg-emerald-300" },
+  ]
+
+  return (
+    <div className="flex items-end justify-between h-48 gap-2">
+      {data.map((item, index) => (
+        <motion.div
+          key={index}
+          className={cn("rounded-full w-8", item.color)}
+          initial={{ height: 0 }}
+          animate={{ height: `${item.value * 2}px` }}
+          transition={{
+            duration: 0.8,
+            delay: index * 0.1,
+            type: "spring",
+            stiffness: 100,
+          }}
+          whileHover={{ scale: 1.1 }}
+        />
+      ))}
+    </div>
+  )
 }
