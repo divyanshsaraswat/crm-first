@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono,Noto_Sans } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/sidebar";
+import ClientLayoutWrapper from "@/components/clientlayoutwrapper";
 const notoSans = Noto_Sans({
   variable: "--font-noto-sans",
   subsets: ["latin"],
@@ -35,10 +36,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${notoSans.variable} antialiased w-screen flex overflow-x-hidden flex-row justify-between`}
         
       >
-          <Sidebar/>
-        {children}
+          <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
 
       </body>
     </html>
   );
 }
+

@@ -7,11 +7,16 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table"
+
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarSeparator,
+  MenubarShortcut,
+  MenubarTrigger,
+} from "@/components/ui/menubar"
 
 import {
   Table,
@@ -23,7 +28,7 @@ import {
 } from "@/components/ui/table"
 import { useState } from "react"
 import { Button } from "@/components/ui/button" // For pagination buttons
-import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react" // Optional icons
+import { BoxSelect, ChevronDown, ChevronLeft, ChevronRight, Dot, EllipsisVertical, OptionIcon, PencilIcon } from "lucide-react" // Optional icons
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -34,6 +39,7 @@ export function DataTable<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
+  console.log(data);
   const table = useReactTable({
     data,
     columns,
@@ -45,21 +51,39 @@ export function DataTable<TData, TValue>({
   function CustomTableRow({ row,child,depth }: { row: any,child?: boolean,depth?: number }) {
     const [isOpen, setIsOpen] = useState(false)
     const [data,setdata] = useState('no')
+    const [activehover,setactivehover] = useState(true)
     
     let depthin = depth||0;
+  function Options({children}:ReactNode){
+    return(
+      <>
+      <Menubar className="bg-transparent h-fit border-none shadow-none">
+        <MenubarMenu>
+          <MenubarTrigger className="p-0 h-0 bg-none">{children}</MenubarTrigger>
+          <MenubarContent>
+            <MenubarItem>Edit<MenubarShortcut><PencilIcon/></MenubarShortcut></MenubarItem> 
+            <MenubarItem>Select <MenubarShortcut><BoxSelect></BoxSelect></MenubarShortcut></MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
+      </Menubar>
 
+      </>
+    )
+  }
   return (
     <>
       <TableRow
         key={row.id}
         data-state={row.getIsSelected() && "selected"}
         className="border"
+        
 
       >
         {row.getVisibleCells().map((cell:any, idx:number) => (
           <TableCell key={cell.id}>
-              <div className={`flex items-center gap-2`} style={{ marginLeft: child && idx === 0 ? `${depthin * 12}px` : 0 }}>
-              {idx==0?<button className="cursor-pointer" onClick={()=>setIsOpen(!isOpen)}>{isOpen?<ChevronDown className="w-4 h-4"></ChevronDown>:<ChevronRight className="w-4 h-4"></ChevronRight>}</button>:""}
+              <div className={`flex items-center gap-1`} style={{ marginLeft: child && idx === 0 ? `${depthin * 12}px` : 0 }}>
+              {idx==0 && activehover?<Options><button className="cursor-pointer">{<EllipsisVertical className="w-4 h-4"/>}</button></Options>:""}
+              {idx==0?<button className="cursor-pointer" onClick={()=>setIsOpen(!isOpen)}>{isOpen?<ChevronDown className="w-4 h-4"/>:<ChevronRight className="w-4 h-4"></ChevronRight>}</button>:""}
               {flexRender(cell.column.columnDef.cell, cell.getContext())}
               
               </div>

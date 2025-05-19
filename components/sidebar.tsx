@@ -7,6 +7,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { useState,useEffect } from "react";
 import { useRouter } from "next/navigation";
+interface UserData {
+  created_at: string;    
+  email: string;
+  id: string;
+  parent_id: string;
+  password_hash: string;
+  role: string;
+  updated_at: string; 
+  username: string;
+}
+
 export default function Sidebar() {
       const [expanded, setExpanded] = useState(false)
       const [isMobile, setIsMobile] = useState(false)
@@ -21,9 +32,11 @@ export default function Sidebar() {
             setExpanded(false)
           }
         }
-    
+
+
+      
         // Initial check
-        checkIfMobile()
+        checkIfMobile();
     
         // Add event listener
         window.addEventListener("resize", checkIfMobile)
@@ -35,7 +48,7 @@ export default function Sidebar() {
         <>
          <motion.aside
         className={cn(
-          "static h-full bg-transparent text-white transition-all duration-300 ease-in-out z-10",
+          "static h-full hidden md:block bg-transparent text-white transition-all duration-300 ease-in-out z-10",
           expanded ? "w-64" : "w-16",
         )}
         initial={false}
@@ -55,7 +68,7 @@ export default function Sidebar() {
               animate={{ opacity: expanded ? 1 : 0 }}
               transition={{ duration: 0.1 }}
             >
-              CRM
+              CRM First
             </motion.span>
           </div>
         </div>
@@ -112,9 +125,20 @@ export default function Sidebar() {
 }
 
 export function Header(){
-          const [expanded, setExpanded] = useState(true)
+      const [expanded, setExpanded] = useState(true)
       const [isMobile, setIsMobile] = useState(false)
+      const [data,setdata] = useState<UserData>()
       const [active, setActive] = useState<number>(0)
+      const router = useRouter();
+      const logout = async()=>{
+        await fetch('/api/logout').then((res)=>{
+          console.log(res)
+          window.location.href='/login'
+          
+        }).catch((e)=>{
+          console.error(e)
+        })
+      }
     useEffect(() => {
         const checkIfMobile = () => {
           setIsMobile(window.innerWidth < 1024)
@@ -124,9 +148,25 @@ export function Header(){
             setExpanded(true)
           }
         }
-    
+          const fetchData = async () => {
+          try {
+            const result = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/verify`, {
+              method: "GET",
+              credentials: "include",
+            });
+            if (!result.ok) {
+              throw new Error("Failed to fetch user verification");
+            }
+            const output = await result.json();
+            setdata(output)
+          } catch (error) {
+            console.error("Error fetching user verification:", error);
+          }
+        }
+
         // Initial check
         checkIfMobile()
+        fetchData()
     
         // Add event listener
         window.addEventListener("resize", checkIfMobile)
@@ -138,11 +178,18 @@ export function Header(){
         <>
          <header className="flex items-center justify-between h-16 px-6  bg-transparent ">
           <h1 className="text-xl font-semibold text-gray-800">
-            {isMobile && (
+            {/* {isMobile && (
               <button onClick={() => setExpanded(!expanded)} className="mr-4 p-1 rounded-md hover:bg-gray-100">
                 {expanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
               </button>
-            )}
+            )} */}
+            <motion.span
+              className="font-bold text-xl whitespace-nowrap text-emerald-700"
+              
+          
+            >
+              CRM First
+            </motion.span>
           </h1>
 
           <div className="flex items-center gap-4 ">
@@ -150,19 +197,20 @@ export function Header(){
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="relative flex flex-row bg-transparent h-12 w-12 rounded-xl cursor-pointer">
                   <Bell className="h-12 w-12"/>
-                  <div className="absolute right-4 top-3 w-2 h-2 bg-red-700 rounded-full"></div>
+                    <div className="absolute right-4 top-3 w-2 h-2 bg-red-700 rounded-full animate-ping"></div>
+                    <div className="absolute right-4 top-3 w-2 h-2 bg-red-700 rounded-full"></div>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 md:w-100 backdrop-blur-md bg-white/20 border border-white/30 rounded-xl shadow-md">
                 <DropdownMenuItem className="cursor-pointer">
-                    <div className="flex flex-row items-center justify-start gap-10 w-full hover:bg-gray-200 p-2 rounded-md">
-                    <Bell className="h-5 w-5 scale-150 text-gray-800" />
+                    <div className="flex flex-row items-center justify-start gap-10 w-full  p-2 rounded-md">
+                    <Bell className="h-5 w-5 scale-150 text-gray-800 dark:text-white" />
                         <p className="text-sm font-semibold truncate">Notifications dfgnfdkjgndfgndfgk  kergjerkgj fgkjdfngkdfngkdfgkfdngdfngkjdfnjgndfkjgndfjgnkjdfgnkjdfngkjgndfkjngkjngkjdfngkjdfgkldfngkldfngk</p>
                     </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer">
-                    <div className="flex flex-row items-center justify-start gap-10 w-full hover:bg-gray-200 p-2 rounded-md">
-                    <PencilIcon className="h-5 w-5 scale-150 text-gray-800" />
+                    <div className="flex flex-row items-center justify-start gap-10 w-full p-2 rounded-md">
+                    <PencilIcon className="h-5 w-5 scale-150 text-gray-800 dark:text-white" />
                         <p className="text-sm font-semibold truncate">Notifications dfgnfdkjgndfgndfgk  kergjerkgj fgkjdfngkdfngkdfgkfdngdfngkjdfnjgndfkjgndfjgnkjdfgnkjdfngkjgndfkjngkjngkjdfngkjdfgkldfngkldfngk</p>
                     </div>
                 </DropdownMenuItem>
@@ -183,20 +231,30 @@ export function Header(){
                     <AvatarImage src="https://png.pngtree.com/png-vector/20220709/ourmid/pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png" alt="User" />
                     <AvatarFallback>BS</AvatarFallback>
                   </Avatar>
-                  <div className="hidden md:flex  items-center justify-start gap-2 p-2 ">
+                  {data?(<div className="hidden md:flex  items-center justify-start gap-2 p-2 ">
                   <div className="flex flex-col space-y-1 leading-none">
-                    <p className="font-medium text-left">Budiono Siregar</p>
-                    <p className="text-xs text-muted-foreground">budiono.sire@gmail.com</p>
+                    <p className="font-medium text-left">{data?.username}</p>
+                    <p className="text-xs text-muted-foreground">{data?.email}</p>
                   </div>
-                </div>
+                </div>):(
+                  <div className="hidden md:flex items-center justify-start gap-2 p-2">
+                    <div className="flex flex-col space-y-1 leading-none">
+                      <div className="h-4 w-24">
+                        <div className="h-4 w-full bg-gray-200 animate-pulse rounded" />
+                      </div>
+                      <div className="h-3 w-32">
+                        <div className="h-3 w-full bg-gray-200 animate-pulse rounded" />
+                      </div>
+                    </div>
+                  </div>
+                )}
                   <ChevronsUpDownIcon className="hidden md:flex h-4 w-4 text-muted-foreground" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-fit md:w-56 backdrop-blur-md bg-white/20 border border-white/30 rounded-xl shadow-md">
                 
-                <DropdownMenuItem className="cursor-pointer hover:bg-grey-700 p-2">Profile</DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer hover:bg-grey-700 p-2">Settings</DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-red-800 hover:bg-grey-700 p-2">Logout</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer hover:bg-grey-700 p-2" onClick={()=>router.push('/settings')}>Profile</DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer text-red-800 hover:bg-grey-700 p-2" onClick={()=>logout()}>Logout</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

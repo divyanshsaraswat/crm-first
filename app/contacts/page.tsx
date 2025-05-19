@@ -1,36 +1,47 @@
 'use client'
 import { Header } from "@/components/sidebar";
-import { Payment, columns } from "./columns"
+import { columns } from "./columns"
+import type {Contacts}from "./columns"
 import { DataTable } from "./data-table"
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Columns3, FilterIcon, Loader2, SortDesc, X } from "lucide-react";
+import { Columns3, FilterIcon, Loader2, PlusCircle, SortDesc, X } from "lucide-react";
 import { Suspense, use, useEffect, useState } from "react";
+import { CrmContactModal } from "@/components/forms";
 
 export default  function Contacts() {
-      const [data, setdata] = useState<Payment[]>([])
+      const [data, setdata] = useState<Contacts[]>([])
       const [loading, setloading] = useState<boolean>(false)
       const [typing, settyping] = useState<string>('')
       useEffect(() => {
-        async function getData(): Promise<Payment[]> {
-            const baseData: Payment[] = [
+        async function getData(): Promise<Contacts[]> {
+            const baseData: Contacts[] = [
                 {
                     id: "728ed52f",
-                    amount: 100,
-                    status: "pending",
-                    email: "m@example.com",
+                    first_name: "John",
+                    last_name: "Doe",
+                    email: "john.doe@example.com",
+                    phone: "+1-555-0123",
+                    account_id: "ACC001",
+                    contact_owner_id: "OWN001"
                 },
                 {
                     id: "489e1d42",
-                    amount: 125,
-                    status: "processing",
-                    email: "test@example.com",
+                    first_name: "Jane",
+                    last_name: "Smith",
+                    email: "jane.smith@example.com",
+                    phone: "+1-555-0124",
+                    account_id: "ACC002",
+                    contact_owner_id: "OWN002"
                 },
                 {
                     id: "63d97823",
-                    amount: 200,
-                    status: "success",
-                    email: "user@example.com",
+                    first_name: "Robert",
+                    last_name: "Johnson",
+                    email: "robert.j@example.com",
+                    phone: "+1-555-0125",
+                    account_id: "ACC003",
+                    contact_owner_id: "OWN003"
                 }
             ];
             
@@ -51,6 +62,7 @@ export default  function Contacts() {
     return(
         <>
               <div className="flex-1 flex flex-col overflow-scroll bg-transparent" style={{scrollbarWidth:"none"}}>
+
                 <Header/>
                 <main className="flex flex-col overflow-y-auto p-6">
                     <div>
@@ -58,7 +70,7 @@ export default  function Contacts() {
                             <div className="flex flex-row items-center gap-2 w-full sm:w-auto  rounded-md bg-transparent px-2">
                                 <input
                                     type="input"
-                                    placeholder="Search users..."
+                                    placeholder="Search contacts..."
                                     value={typing}
                                     className="w-full px-3 py-2 rounded-md border-input bg-transparent border-b focus:outline-none focus:border-emerald-500 focus:ring-0"
                                     onChange={(e)=>{settyping(e.target.value)}}
@@ -69,13 +81,14 @@ export default  function Contacts() {
                                         <X className="h-4 w-4"/>
                                     </button>
                                 </div>}
-                               
-                            </div>
-                            <div className="flex gap-2">
-                                <Button variant="outline">
+                               <Button variant="outline">
                                     Filter
                                     <FilterIcon className="h-4 w-4 ml-2"/>
                                 </Button>
+                            </div>
+                            <div className="flex gap-2">
+                                
+                                
                                 <Button variant="outline">
                                     Sort
                                     <SortDesc className="h-4 w-4 ml-2"/>
@@ -97,6 +110,7 @@ export default  function Contacts() {
                                         {/* Add column selection content here */}
                                     </DialogContent>
                                 </Dialog>
+                                <CrmContactModal/>
                             </div>
                             
                         </div>

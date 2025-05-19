@@ -1,61 +1,45 @@
 'use client'
 import { Header } from "@/components/sidebar";
-import { Payment, columns } from "./columns"
+import type { Users } from "./columns"
+import { columns } from "./columns"
 import { DataTable } from "./data-table"
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Columns3, FilterIcon, Loader2, SortDesc, X } from "lucide-react";
 import { Suspense, use, useEffect, useState } from "react";
+import { CrmUsersModal } from "@/components/forms";
 
 export default  function Users() {
-      const [data, setdata] = useState<Payment[]>([])
+      const [data, setdata] = useState<Users[]>([])
       const [loading, setloading] = useState<boolean>(false)
       const [typing, settyping] = useState<string>('')
       useEffect(() => {
-        async function getData(): Promise<Payment[]> {
-            const baseData: Payment[] = [
-                {
-                    id: "728ed52f",
-                    amount: 100,
-                    status: "pending",
-                    email: "m@example.com",
-                },
-                {
-                    id: "489e1d42",
-                    amount: 125,
-                    status: "processing",
-                    email: "test@example.com",
-                },
-                {
-                    id: "63d97823",
-                    amount: 200,
-                    status: "success",
-                    email: "user@example.com",
-                }
-            ];
-            
-            return Array(25).fill(null).flatMap((_, index) =>
-                baseData.map(item => ({
-                    ...item,
-                    id: `${item.id}-${index + 1}` // Add unique ids
-                }))
-            );
-        }
         const fetchData = async () => {
-          const res = await getData()
-          setdata(res)
-          setloading(true)
+          
+          const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/`,{
+            credentials:'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Cookie': token
+            }
+          }).then(async(res)=>{
+            const result = await res.json()
+            setdata(result.message)
+            setloading(true)
+        }).catch((e)=>{console.error(e)})
         }
         fetchData()
+        
       },[]);
     return(
         <>
-              <div className="flex-1 flex flex-col overflow-scroll bg-transparent">
+              <div className="flex-1 flex flex-col  bg-transparent">
                 <Header/>
                 <main className="flex flex-col overflow-y-auto p-6">
                     <div>
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                            <div className="flex flex-row items-center gap-2 w-full sm:w-auto  rounded-md bg-transparent px-2">
+                        <div className="flex flex-col sm:flex-row  justify-between items-start sm:items-center gap-4 mb-4">
+                            <div className="flex flex-row items-center gap-2 w-full sm:w-1/4  rounded-md bg-transparent px-2">
                                 <input
                                     type="input"
                                     placeholder="Search users..."
@@ -69,13 +53,14 @@ export default  function Users() {
                                         <X className="h-4 w-4"/>
                                     </button>
                                 </div>}
-                               
-                            </div>
-                            <div className="flex gap-2">
                                 <Button variant="outline">
                                     Filter
                                     <FilterIcon className="h-4 w-4 ml-2"/>
                                 </Button>
+                               
+                            </div>
+                            <div className="flex gap-2">
+                                
                                 <Button variant="outline">
                                     Sort
                                     <SortDesc className="h-4 w-4 ml-2"/>
@@ -97,6 +82,7 @@ export default  function Users() {
                                         {/* Add column selection content here */}
                                     </DialogContent>
                                 </Dialog>
+                                <CrmUsersModal/>
                             </div>
                             
                         </div>
