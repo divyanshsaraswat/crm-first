@@ -1,4 +1,25 @@
 "use client"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+
 
 import {
   ColumnDef,
@@ -7,7 +28,7 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Menubar,
   MenubarContent,
@@ -26,7 +47,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button" // For pagination buttons
 import { BoxSelect, ChevronDown, ChevronLeft, ChevronRight, Dot, EllipsisVertical, OptionIcon, PencilIcon } from "lucide-react" // Optional icons
 
@@ -37,9 +58,10 @@ interface DataTableProps<TData, TValue> {
 
 export function DataTable<TData, TValue>({
   columns,
-  data,
+  data
 }: DataTableProps<TData, TValue>) {
-  console.log(data);
+  const [select, setselect] = useState<string[]>([])
+
   const table = useReactTable({
     data,
     columns,
@@ -48,30 +70,70 @@ export function DataTable<TData, TValue>({
     enableColumnResizing: true,
     columnResizeMode: "onChange",
   })
-  function CustomTableRow({ row,child,depth }: { row: any,child?: boolean,depth?: number }) {
+  const getAllId = () => {
+    const allIds = table.getRowModel().rows.map((row) => row.getValue('id')) as string[];
+    if (select.length === 0) {
+      setselect(allIds);
+    } else {
+      setselect([]);
+    }
+  }
+    const deleteId = (id:string) => {
+    const fetchData = async () => {
+      const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': token
+        },
+      });
+      if (response.ok) {
+        console.log('Data deleted successfully');
+      } else {
+        console.error('Error deleting data');
+      }
+    }
+    fetchData();
+    setselect([]);
+  }
+  const exportdata = (data:string[])=>{
+    const fetchData = async () => {
+      const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/export`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': token
+        },
+        body: JSON.stringify({ "records": select }),
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'data.csv';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }  else {
+        console.error('Error exporting data');
+      }
+    }
+    fetchData();
+  }
+  function CustomTableRow({ row, child, depth }: { row: any, child?: boolean, depth?: number }) {
     const [isOpen, setIsOpen] = useState(false)
     const [data,setdata] = useState('no')
     const [activehover,setactivehover] = useState(true)
-    
     let depthin = depth||0;
-  function Options({children}:ReactNode){
-    return(
-      <>
-      <Menubar className="bg-transparent h-fit border-none shadow-none">
-        <MenubarMenu>
-          <MenubarTrigger className="p-0 h-0 bg-none">{children}</MenubarTrigger>
-          <MenubarContent>
-            <MenubarItem>Edit<MenubarShortcut><PencilIcon/></MenubarShortcut></MenubarItem> 
-            <MenubarItem>Select <MenubarShortcut><BoxSelect></BoxSelect></MenubarShortcut></MenubarItem>
-          </MenubarContent>
-        </MenubarMenu>
-      </Menubar>
-
-      </>
-    )
-  }
   return (
     <>
+   
       <TableRow
         key={row.id}
         data-state={row.getIsSelected() && "selected"}
@@ -82,8 +144,15 @@ export function DataTable<TData, TValue>({
         {row.getVisibleCells().map((cell:any, idx:number) => (
           <TableCell key={cell.id}>
               <div className={`flex items-center gap-1`} style={{ marginLeft: child && idx === 0 ? `${depthin * 12}px` : 0 }}>
-              {idx==0 && activehover?<Options><button className="cursor-pointer">{<EllipsisVertical className="w-4 h-4"/>}</button></Options>:""}
+                {idx==0 && <Checkbox
+                  className="w-4 h-4 cursor-pointer"
+                  checked={select.includes(cell.getValue() as string)}
+                  onCheckedChange={(checked:boolean)=>{
+                  setselect(checked ? [...select, cell.getValue() as string] : select.filter(s => s !== cell.getValue()))
+                  }}
+                />}
               {idx==0?<button className="cursor-pointer" onClick={()=>setIsOpen(!isOpen)}>{isOpen?<ChevronDown className="w-4 h-4"/>:<ChevronRight className="w-4 h-4"></ChevronRight>}</button>:""}
+
               {flexRender(cell.column.columnDef.cell, cell.getContext())}
               
               </div>
@@ -96,11 +165,69 @@ export function DataTable<TData, TValue>({
 }
   return (
     <div className="rounded-md ">
+       {select.length==1 && <div className="flex flex-col sm:flex-row  justify-between items-start sm:items-center gap-4 mb-4">
+                            <div className="flex flex-row items-center gap-4 w-full sm:w-1/4  rounded-md bg-transparent px-4">
+                             <button className="cursor-pointer hover:underline text-emerald-600">Edit</button>
+                             <AlertDialog>
+                                <AlertDialogTrigger> 
+                                  <button className="cursor-pointer hover:underline text-red-600">Delete</button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                <AlertDialogTitle>Delete your data</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will permanently delete your account
+                                      and remove your data from our servers.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction>Continue</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                             <div className="text-gray-300">|</div>
+                            <Dialog>
+                            <DialogTrigger>    
+                                <button className="cursor-pointer hover:underline text-emerald-600" onClick={()=>exportdata(select)}>Export</button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Exporting Data</DialogTitle>
+
+                              </DialogHeader>
+                                <div className="italic text-center">Downloading...</div>
+
+                            </DialogContent>
+                          </Dialog>                            
+                          </div>
+                         
+                            
+                        </div>}
+      {select.length>1 && <div className="flex flex-col sm:flex-row  justify-between items-start sm:items-center gap-4 mb-4">
+                            <div className="flex flex-row items-center gap-4 w-full sm:w-1/4  rounded-md bg-transparent px-4">
+                             <div className="text-gray-300">|</div>
+                             <Dialog>
+                            <DialogTrigger>    
+                                <button className="cursor-pointer hover:underline text-emerald-600" onClick={()=>exportdata(select)}>Export</button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Exporting Data</DialogTitle>
+
+                              </DialogHeader>
+                                <div className="italic text-center">Downloading...</div>
+
+                            </DialogContent>
+                          </Dialog>                      
+                           </div>
+                            </div>
+}
       <Table className="bg-white dark:bg-inherit border">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
+              {headerGroup.headers.map((header,idx) => {
                 return (
                   <TableHead
                     key={header.id}
@@ -109,6 +236,12 @@ export function DataTable<TData, TValue>({
                       position: 'relative',
                     }}
                   >
+                    <div className="flex gap-2 items-center">
+                    {idx==0 && <Checkbox
+                  className="w-4 h-4 cursor-pointer"
+                  onCheckedChange={(checked:boolean)=>getAllId()}
+                  
+                />}
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -131,6 +264,7 @@ export function DataTable<TData, TValue>({
                         }}
                       />
                     )}
+                    </div>
                   </TableHead>
                 )
               })}
@@ -139,13 +273,12 @@ export function DataTable<TData, TValue>({
         </TableHeader>
         <TableBody>
           {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-
-                
-              <CustomTableRow key={row.id} row={row} />
-
-            ))
-          ) : (
+            table.getRowModel().rows.map((row) =>{
+              
+              return (
+                <CustomTableRow key={row.id} row={row}/>
+              )
+            } )) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">
                 No results.

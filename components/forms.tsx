@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { UserPlus } from "lucide-react"
-
+import Flag from 'react-world-flags'
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -50,7 +50,21 @@ const formSchema = z.object({
 
 export function CrmContactModal() {
   const [open, setOpen] = useState(false)
-
+   const submitData = async (data: any) => {
+    const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
+    const response = await fetch("/api/contacts/insert", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        'Cookie': token
+      },
+      body: JSON.stringify(data),
+    })
+    if (!response.ok) {
+      throw new Error("Failed to create user")
+    }
+    return response.json()
+  }
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -70,6 +84,7 @@ export function CrmContactModal() {
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values)
     setOpen(false)
+    submitData(values)
     form.reset()
   }
 
@@ -136,19 +151,44 @@ export function CrmContactModal() {
                       )}
                     />
 
-                    <FormField
+                     <FormField
                       control={form.control}
                       name="phone"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Phone Number*</FormLabel>
                           <FormControl>
-                            <Input placeholder="+1 (555) 000-0000" {...field} />
+                            <div className="flex gap-2">
+                              <Select defaultValue="+91" onValueChange={(value) => field.onChange(value + field.value.replace(/^\+\d+/, ''))}>
+                                <SelectTrigger className="w-[120px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="+91"><Flag code='IN' height="25px" width="25px"/> +91 India</SelectItem>
+                                    <SelectItem value="+1"><Flag code='US' height="25px" width="25px"/> +1 USA</SelectItem>
+                                    <SelectItem value="+86"><Flag code='CN' height="25px" width="25px"/> +86 China</SelectItem>
+                                    <SelectItem value="+971"><Flag code='AE' height="25px" width="25px"/> +971 UAE</SelectItem>
+                                    <SelectItem value="+65"><Flag code='SG' height="25px" width="25px"/> +65 Singapore</SelectItem>
+                                    <SelectItem value="+44"><Flag code='GB' height="25px" width="25px"/> +44 UK</SelectItem>
+                                    <SelectItem value="+81"><Flag code='JP' height="25px" width="25px"/> +81 Japan</SelectItem>
+                                    <SelectItem value="+82"><Flag code='KR' height="25px" width="25px"/> +82 South Korea</SelectItem>
+                                    <SelectItem value="+49"><Flag code='DE' height="25px" width="25px"/> +49 Germany</SelectItem>
+                                    <SelectItem value="+61"><Flag code='AU' height="25px" width="25px"/> +61 Australia</SelectItem>
+                                    <SelectItem value="+966"><Flag code='SA'height="25px" width="25px"/> +966 Saudi Arabia</SelectItem>
+                                    <SelectItem value="+84"><Flag code='VN' height="25px" width="25px"/> +84 Vietnam</SelectItem>
+                                    <SelectItem value="+62"><Flag code='ID' height="25px" width="25px"/> +62 Indonesia</SelectItem>
+                                    <SelectItem value="+31"><Flag code='NL' height="25px" width="25px"/> +31 Netherlands</SelectItem>
+                                    <SelectItem value="+33"><Flag code='FR' height="25px" width="25px"/> +33 France</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Input placeholder="(555) 000-0000" {...field} />
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <FormField
@@ -290,7 +330,21 @@ export function CrmContactModal() {
 
 export function CrmUsersModal() {
   const [open, setOpen] = useState(false)
-
+  const submitData = async (data: any) => {
+    const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
+    const response = await fetch("/api/users/insert", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        'Cookie': token
+      },
+      body: JSON.stringify(data),
+    })
+    if (!response.ok) {
+      throw new Error("Failed to create user")
+    }
+    return response.json()
+  }
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -310,6 +364,7 @@ export function CrmUsersModal() {
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values)
     setOpen(false)
+    // submitData(values)
     form.reset()
   }
 
@@ -383,7 +438,31 @@ export function CrmUsersModal() {
                         <FormItem>
                           <FormLabel>Phone Number*</FormLabel>
                           <FormControl>
-                            <Input placeholder="+1 (555) 000-0000" {...field} />
+                            <div className="flex gap-2">
+                              <Select defaultValue="+91" onValueChange={(value) => field.onChange(value + field.value.replace(/^\+\d+/, ''))}>
+                                <SelectTrigger className="w-[120px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="+91"><Flag code='IN' height="25px" width="25px"/> +91 India</SelectItem>
+                                    <SelectItem value="+1"><Flag code='US' height="25px" width="25px"/> +1 USA</SelectItem>
+                                    <SelectItem value="+86"><Flag code='CN' height="25px" width="25px"/> +86 China</SelectItem>
+                                    <SelectItem value="+971"><Flag code='AE' height="25px" width="25px"/> +971 UAE</SelectItem>
+                                    <SelectItem value="+65"><Flag code='SG' height="25px" width="25px"/> +65 Singapore</SelectItem>
+                                    <SelectItem value="+44"><Flag code='GB' height="25px" width="25px"/> +44 UK</SelectItem>
+                                    <SelectItem value="+81"><Flag code='JP' height="25px" width="25px"/> +81 Japan</SelectItem>
+                                    <SelectItem value="+82"><Flag code='KR' height="25px" width="25px"/> +82 South Korea</SelectItem>
+                                    <SelectItem value="+49"><Flag code='DE' height="25px" width="25px"/> +49 Germany</SelectItem>
+                                    <SelectItem value="+61"><Flag code='AU' height="25px" width="25px"/> +61 Australia</SelectItem>
+                                    <SelectItem value="+966"><Flag code='SA'height="25px" width="25px"/> +966 Saudi Arabia</SelectItem>
+                                    <SelectItem value="+84"><Flag code='VN' height="25px" width="25px"/> +84 Vietnam</SelectItem>
+                                    <SelectItem value="+62"><Flag code='ID' height="25px" width="25px"/> +62 Indonesia</SelectItem>
+                                    <SelectItem value="+31"><Flag code='NL' height="25px" width="25px"/> +31 Netherlands</SelectItem>
+                                    <SelectItem value="+33"><Flag code='FR' height="25px" width="25px"/> +33 France</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Input placeholder="(555) 000-0000" {...field} />
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>

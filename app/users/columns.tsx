@@ -10,6 +10,9 @@ export type Users = {
   email: string
   parent_id:string
   created_at: string
+  password_hash: string
+  updated_at: string
+  role: string
 }
 
 export const columns: ColumnDef<Users>[] = [

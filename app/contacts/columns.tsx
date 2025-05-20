@@ -12,6 +12,7 @@ export type Contacts = {
   phone: string
   account_id: string
   contact_owner_id: string
+  updated_at?: string
 }
 
 export const columns: ColumnDef<Contacts>[] = [
@@ -50,4 +51,9 @@ export const columns: ColumnDef<Contacts>[] = [
     header: "Managed By",
     enableResizing:true,
   },
+  {
+    accessorKey: "updated_at",
+    header: "Updated At",
+    enableResizing:true,
+  }
 ]

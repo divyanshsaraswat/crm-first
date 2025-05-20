@@ -12,52 +12,27 @@ import { CrmContactModal } from "@/components/forms";
 export default  function Contacts() {
       const [data, setdata] = useState<Contacts[]>([])
       const [loading, setloading] = useState<boolean>(false)
+      const [select, setselect] = useState<string>('')
       const [typing, settyping] = useState<string>('')
-      useEffect(() => {
-        async function getData(): Promise<Contacts[]> {
-            const baseData: Contacts[] = [
-                {
-                    id: "728ed52f",
-                    first_name: "John",
-                    last_name: "Doe",
-                    email: "john.doe@example.com",
-                    phone: "+1-555-0123",
-                    account_id: "ACC001",
-                    contact_owner_id: "OWN001"
-                },
-                {
-                    id: "489e1d42",
-                    first_name: "Jane",
-                    last_name: "Smith",
-                    email: "jane.smith@example.com",
-                    phone: "+1-555-0124",
-                    account_id: "ACC002",
-                    contact_owner_id: "OWN002"
-                },
-                {
-                    id: "63d97823",
-                    first_name: "Robert",
-                    last_name: "Johnson",
-                    email: "robert.j@example.com",
-                    phone: "+1-555-0125",
-                    account_id: "ACC003",
-                    contact_owner_id: "OWN003"
-                }
-            ];
-            
-            return Array(25).fill(null).flatMap((_, index) =>
-                baseData.map(item => ({
-                    ...item,
-                    id: `${item.id}-${index + 1}` // Add unique ids
-                }))
-            );
-        }
+     useEffect(() => {
         const fetchData = async () => {
-          const res = await getData()
-          setdata(res)
-          setloading(true)
+          
+          const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/contacts/`,{
+            credentials:'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Cookie': token
+            }
+          }).then(async(res)=>{
+            const result = await res.json()
+            setdata(result?.message[0])
+            console.log(result?.message[0])
+            setloading(true)
+        }).catch((e)=>{console.error(e)})
         }
         fetchData()
+        
       },[]);
     return(
         <>
@@ -114,9 +89,19 @@ export default  function Contacts() {
                             </div>
                             
                         </div>
+                        {select && <div className="flex flex-col sm:flex-row  justify-between items-start sm:items-center gap-4 mb-4">
+                            <div className="flex flex-row items-center gap-4 w-full sm:w-1/4  rounded-md bg-transparent px-4">
+                             <button className="cursor-pointer hover:underline text-emerald-600">Edit</button>
+                             <button className="cursor-pointer hover:underline text-red-600">Delete</button>
+                             <div className="text-gray-300">|</div>
+                            <button className="cursor-pointer hover:underline text-emerald-600">Export</button>
+                            </div>
+                         
+                            
+                        </div>}
                     </div>
                     <div className="w-full mx-auto overflow-hidden bg-transparent">
-                     {loading && <DataTable columns={columns} data={data} />}
+                     {loading && <DataTable columns={columns} data={data}/>}
                      {!loading && <div className="flex flex-row items-center gap-2 justify-center h-64">
                         <Loader2 className="animate-spin h-5 w-5" />
                         <span className="text-gray-500">Loading...</span>

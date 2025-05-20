@@ -229,7 +229,7 @@ export function Header(){
                 <Button variant="ghost" className="relative flex flex-row h-14 w-fit py-5 rounded-md cursor-pointer hover:bg-gray-200">
                   <Avatar className="h-12 w-12">
                     <AvatarImage src="https://png.pngtree.com/png-vector/20220709/ourmid/pngtree-businessman-user-avatar-wearing-suit-with-red-tie-png-image_5809521.png" alt="User" />
-                    <AvatarFallback>BS</AvatarFallback>
+                    <AvatarFallback>{data?.username.substring(0,2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   {data?(<div className="hidden md:flex  items-center justify-start gap-2 p-2 ">
                   <div className="flex flex-col space-y-1 leading-none">

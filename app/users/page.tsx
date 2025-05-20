@@ -25,7 +25,7 @@ export default  function Users() {
             }
           }).then(async(res)=>{
             const result = await res.json()
-            setdata(result.message)
+            setdata(result?.message[0])
             setloading(true)
         }).catch((e)=>{console.error(e)})
         }
@@ -34,7 +34,7 @@ export default  function Users() {
       },[]);
     return(
         <>
-              <div className="flex-1 flex flex-col  bg-transparent">
+              <div className="flex-1 flex flex-col overflow-scroll bg-transparent" style={{scrollbarWidth:"none"}}>
                 <Header/>
                 <main className="flex flex-col overflow-y-auto p-6">
                     <div>
@@ -86,9 +86,10 @@ export default  function Users() {
                             </div>
                             
                         </div>
+                     
                     </div>
                     <div className="w-full mx-auto overflow-hidden bg-transparent">
-                     {loading && <DataTable columns={columns} data={data} />}
+                     {loading && <DataTable columns={columns} data={data}/>}
                      {!loading && <div className="flex flex-row items-center gap-2 justify-center h-64">
                         <Loader2 className="animate-spin h-5 w-5" />
                         <span className="text-gray-500">Loading...</span>
