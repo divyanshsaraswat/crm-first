@@ -10,8 +10,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Addfield, CrmUsersEditModal } from "@/components/forms"
-import { CrmUsersModal } from "@/components/forms"
+import { Badge } from "@/components/ui/badge"
+import { Addfield,CrmTaskEditModal } from "@/components/forms"
 import {
   Dialog,
   DialogContent,
@@ -55,7 +55,7 @@ import {
 } from "@/components/ui/table"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button" // For pagination buttons
-import { BoxSelect, ChevronDown, ChevronLeft, ChevronRight, Columns3,FilterIcon,X } from "lucide-react" // Optional icons
+import { BoxSelect, Check, ChevronDown, ChevronLeft, ChevronRight, Columns3,FilterIcon,X } from "lucide-react" // Optional icons
 import { useRouter } from "next/navigation"
 
 interface DataTableProps<TData, TValue> {
@@ -70,7 +70,18 @@ export function DataTable<TData, TValue>({
   const [select, setselect] = useState<string[]>([])
   const router = useRouter();
   const [sorting,setSorting] = useState<SortingState>([])
-  const [columnVisibility, setColumnVisibility] =useState<VisibilityState>({})
+  const [columnVisibility, setColumnVisibility] =useState<VisibilityState>({
+  id: true,
+  subject: true,
+  body: true,
+  status: true,
+  due_date: true,
+  assigned_user_id: true,
+  created_by:true,
+  contact_id: false,
+  created_at: false,
+  updated_at: false,
+})
   const [searchTerm, setSearchTerm] = useState<ColumnFiltersState>([])
   const [addfield, setaddfield] = useState<number>(0)
   const [loading, setloading] = useState<boolean>(false)
@@ -78,7 +89,7 @@ export function DataTable<TData, TValue>({
   const [refresh,setrefresh] = useState<boolean>(false);
   const globalFilterFn = (row: any, columnId: string, filterValue: string) => {
     const search = String(filterValue || '').toLowerCase();
-    const columns = ["email", "username"];
+    const columns = ["subject","body"];
     const valuesToSearch = columns.map(column => {
       try {
         return row.getValue(column);
@@ -91,7 +102,20 @@ export function DataTable<TData, TValue>({
       String(value || '').toLowerCase().includes(search)
     );
 };
-
+const statusbadges = (line: string) => {
+    const objec: { [key: string]: string } = {
+      "OPEN": "green",
+      "REJECT": "red", 
+      "HOLD": "yellow",
+      "COMPLETED": "transparent"
+    }
+    return (
+      <Badge variant="outline"  style={{background: objec[line] || 'transparent',color:line=='OPEN'?"white":"black"}}>
+      {line}
+      </Badge>
+    )
+   
+  }
   const table = useReactTable({
     data,
     columns,
@@ -113,7 +137,7 @@ export function DataTable<TData, TValue>({
   })
   const getAllId = () => {
     setselect([])
-    const allIds = table.getRowModel().rows.map((row) => row.getValue('id')) as string[];
+    const allIds = table.getRowModel().rows.map((row) => row.getValue('body')) as string[];
     if (select.length === 0) {
       setselect(allIds);
     } else {
@@ -123,11 +147,11 @@ export function DataTable<TData, TValue>({
     const deleteId = (id:string) => {
       const fetchData = async () => {
         const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/${id}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/tasks/${id}`, {
           method: 'DELETE',
           credentials: 'include',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json', 
             'Cookie': token
           },
         });
@@ -144,7 +168,7 @@ export function DataTable<TData, TValue>({
   const exportdata = (data:string[])=>{
     const fetchData = async () => {
       const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/export`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/tasks/export`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -170,55 +194,32 @@ export function DataTable<TData, TValue>({
     fetchData();
   }
   function CustomTableRow({ row, child, depth }: { row: any, child?: boolean, depth?: number }) {
-    const [isOpen, setIsOpen] = useState(false)
-    const [data,setdata] = useState('no')
-    const [activehover,setactivehover] = useState(true)
     let depthin = depth||0;
   return (
     <>
+   
       <TableRow
         key={row.id}
         data-state={row.getIsSelected() && "selected"}
         className="border"
-      >
-        {row.getVisibleCells().map((cell: any, idx: number) => (
-          <TableCell key={cell.id}>
-            <div
-              className={`flex items-center gap-1`}
-              style={{
-                marginLeft: child && idx === 0 ? `${depthin * 12}px` : 0,
-              }}
-            >
-              {idx == 0 && (
-                <Checkbox
-                  className="w-4 h-4 cursor-pointer"
-                  checked={select.includes(cell.getValue() as string)}
-                  onCheckedChange={(checked: boolean) => {
-                    setselect(
-                      checked
-                        ? [...select, cell.getValue() as string]
-                        : select.filter((s) => s !== cell.getValue())
-                    );
-                  }}
-                />
-              )}
-              {idx == 0 ? (
-                <button
-                  className="cursor-pointer"
-                  onClick={() => setIsOpen(!isOpen)}
-                >
-                  {isOpen ? (
-                    <ChevronDown className="w-4 h-4" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4"></ChevronRight>
-                  )}
-                </button>
-              ) : (
-                ""
-              )}
+        
 
-              {cell.column.id === "created_at"
-                ? new Date(cell.getValue() as string).toLocaleString("en-IN", {
+      >
+        {row.getVisibleCells().map((cell:any, idx:number) => (
+          <TableCell key={cell.id}>
+              <div className={`flex items-center gap-1`} style={{ marginLeft: child && idx === 0 ? `${depthin * 12}px` : 0 }}>
+                {idx==0 && <Checkbox
+                  className="w-4 h-4 mr-2 cursor-pointer"
+                  checked={select.includes(cell.getValue() as string)}
+                  onCheckedChange={(checked:boolean)=>{
+                  setselect(checked ? [...select, cell.getValue() as string] : select.filter(s => s !== cell.getValue()))
+                  }}
+                />}
+
+              {cell.column.id === "status" ? (
+                statusbadges(cell.getValue() as string)
+              ) : cell.column.id === "due_date" ? (
+                new Date(cell.getValue() as string).toLocaleString("en-IN", {
                   year: "numeric",
                   month: "2-digit",
                   day: "2-digit",
@@ -227,12 +228,14 @@ export function DataTable<TData, TValue>({
                   hour12: true,
                   timeZone: "Asia/Kolkata"
                 })
-                : flexRender(cell.column.columnDef.cell, cell.getContext())}
-            </div>
+              ) : (
+                flexRender(cell.column.columnDef.cell, cell.getContext())
+              )}
+              
+              </div>
           </TableCell>
         ))}
       </TableRow>
-      {isOpen && <CustomTableRow row={row} child={true} depth={depthin + 1} />}
     </>
   );
 }
@@ -242,11 +245,12 @@ export function DataTable<TData, TValue>({
                             <div className="flex flex-row items-center gap-2 w-full sm:w-1/4  rounded-md bg-transparent px-2">
                                 <input
                                     type="input"
-                                    placeholder="Search users..."
-                                     value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-                                    onChange={(event) =>
-                                      table.getColumn("email")?.setFilterValue(event.target.value)
-                                    }
+                                    placeholder="Search tasks..."
+                                                            value={typing}
+                                                            onChange={(event) => {
+                                                              settyping(event.target.value);
+                                                              table.setGlobalFilter(event.target.value);
+                                                            }}
                                     className="w-full px-3 py-2 rounded-md border-input bg-transparent border-b focus:outline-none focus:border-emerald-500 focus:ring-0"
                                 />
                                 {typing.length!=0 && <div>
@@ -271,7 +275,7 @@ export function DataTable<TData, TValue>({
                                             <Columns3 className="h-4 w-4 ml-2"/>
                                         </Button>
                                     </DialogTrigger>
-                                    <DialogContent className="sm:max-w-[425px]">
+                                    <DialogContent className="sm:max-w-[425px] max-h-[550px] overflow-y-scroll">
                                         <DialogHeader>
                                             <DialogTitle>Manage Columns</DialogTitle>
                                             <DialogDescription>
@@ -308,13 +312,12 @@ export function DataTable<TData, TValue>({
                                           
                                     </DialogContent>
                                 </Dialog>
-                                <CrmUsersModal/>
                             </div>
                             
                         </div>
        {select.length==1 && <div className="flex flex-col sm:flex-row  justify-between items-start sm:items-center gap-4 mb-4">
                             <div className="flex flex-row items-center gap-4 w-full sm:w-1/4  rounded-md bg-transparent px-4">
-                             <CrmUsersEditModal data={table.getCoreRowModel().rows.filter(row=>row.getValue('id')===select[0])}/>
+                             <CrmTaskEditModal   data={table.getCoreRowModel().rows.filter(row=>row.getValue('id')===select[0])} />
                              <AlertDialog>
                                 <AlertDialogTrigger> 
                                   <button className="cursor-pointer hover:underline text-red-600">Delete</button>
@@ -341,6 +344,19 @@ export function DataTable<TData, TValue>({
                             <Dialog>
                             <DialogTrigger>    
                                 <button className="cursor-pointer hover:underline text-emerald-600" onClick={()=>exportdata(select)}>Export</button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Exporting Data</DialogTitle>
+
+                              </DialogHeader>
+                                <div className="italic text-center">Downloading...</div>
+
+                            </DialogContent>
+                          </Dialog>                            
+                            <Dialog>
+                            <DialogTrigger>    
+                                <button className="cursor-pointer hover:underline text-emerald-600 flex flex-row gap-1 w-fit whitespace-nowrap" onClick={()=>exportdata(select)}><Check/>Complete Task</button>
                             </DialogTrigger>
                             <DialogContent>
                               <DialogHeader>

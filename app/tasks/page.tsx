@@ -1,23 +1,33 @@
 'use client'
 import { Header } from "@/components/sidebar";
-import type { Users } from "./columns"
-import { columns } from "./columns"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+import { columns, Task } from "./columns"
 import { DataTable } from "./data-table"
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Columns3, FilterIcon, Loader2, SortDesc, User2, X } from "lucide-react";
+import { Columns3, FilterIcon, Loader2, Pen, SortDesc, X } from "lucide-react";
 import { Suspense, use, useEffect, useState } from "react";
 import { CrmUsersModal } from "@/components/forms";
 
-export default  function Users() {
-      const [data, setdata] = useState<Users[]>([])
+export default  function Tasks() {
+      const [data, setdata] = useState<Task[]>([])
       const [loading, setloading] = useState<boolean>(false)
       const [typing, settyping] = useState<string>('')
+      const [view,setview] = useState(0)
       useEffect(() => {
         const fetchData = async () => {
           
           const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/`,{
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/tasks/`,{
             credentials:'include',
             headers: {
                 'Content-Type': 'application/json',
@@ -36,18 +46,23 @@ export default  function Users() {
         <>
               <div className="flex-1 flex flex-col overflow-scroll bg-transparent" style={{scrollbarWidth:"none"}}>
                 <Header/>
-                <main className="flex flex-col overflow-y-auto p-6 gap-5">
-                    <div className="text-2xl flex flex-row items-center gap-3 font-bold" style={{fontFamily:"var(--font-noto-sans)"}}>
-                    <User2 color="green"/>Users   
+                <main className="flex flex-col overflow-y-auto p-6">
+                    <div className="text-2xl flex flex-row items-center gap-5 font-bold" style={{fontFamily:"var(--font-noto-sans)"}}>
+                    <Pen color="green"/>Tasks   
                      
                     </div>
-                    <div className="w-full mx-auto overflow-hidden bg-transparent">
-                     {loading && <DataTable columns={columns} data={data}/>}
+                    <Card className="w-full mx-auto overflow-hidden bg-transparent shadow-none border-0">
+                     <div className="flex flex-row gap-2"> 
+                    <Button variant={view==0?"default":"outline"} className="rounded-none" onClick={()=>setview(0)}>My Tasks</Button>
+                    <Button variant={view==1?"default":"outline"} className="rounded-none" onClick={()=>setview(1)}>All Tasks</Button>
+                    </div>
+                     {loading && view==0 && <DataTable columns={columns} data={data}/>}
+                     {loading && view==1 && <DataTable columns={columns} data={data}/>}
                      {!loading && <div className="flex flex-row items-center gap-2 justify-center h-64">
                         <Loader2 className="animate-spin h-5 w-5" />
                         <span className="text-gray-500">Loading...</span>
                       </div>}
-                     </div>
+                     </Card>
                  </main>
                  
               </div>

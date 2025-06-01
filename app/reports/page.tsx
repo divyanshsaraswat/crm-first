@@ -1,6 +1,6 @@
 "use client"
 
-import { useState,useReducer, useEffect } from "react"
+import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,151 +10,24 @@ import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Bell, Globe, Lock, Mail, Shield, User, Users, Workflow,Eye,Loader2 } from "lucide-react"
+import { Bell, Globe, Lock, Mail, Shield, User, Users, Workflow } from "lucide-react"
 import { Header } from "@/components/sidebar"
 
-type Preferences = {
-  currency?: string;
-  date_format?: string;
-  notify_browser?: boolean;
-  notify_email?: boolean;
-  notify_lead_alerts?: boolean;
-  notify_task_reminders?: boolean;
-  theme?: string;
-  time_format?: string;
-};
-type PreferencesAction =
-  | { type: "SET_ALL"; payload: Preferences }
-  | { type: "UPDATE"; payload: Partial<Preferences> };
 export default function SettingsPage() {
+  const [emailNotifications, setEmailNotifications] = useState(true)
+  const [browserNotifications, setBrowserNotifications] = useState(true)
+  const [weeklyReports, setWeeklyReports] = useState(true)
+  const [leadAlerts, setLeadAlerts] = useState(true)
+  const [taskReminders, setTaskReminders] = useState(true)
 
-const preferencesReducer = (state: Preferences, action: PreferencesAction): Preferences => {
-  switch (action.type) {
-    case "SET_ALL":
-      return { ...action.payload };
-    case "UPDATE":
-      return { ...state, ...action.payload };
-    default:
-      return state;
-  }
-};
- const [preferences, dispatch] = useReducer(preferencesReducer, {});
- const [data,setdata] = useState<any>({});
- const [loading,setloading] = useState<boolean>(true);
-  const roles = [
-    {
-      name: "Admin",
-      icon: Shield,
-      color: "bg-red-50 text-red-700 border-red-200",
-      badgeColor: "bg-red-100 text-red-800",
-      permissions: [
-        "Full system access",
-        "User management",
-        "Role assignments",
-        "System configuration",
-        "Data export/import",
-        "Security settings",
-        "Audit logs access",
-        "Billing management",
-      ],
-    },
-    {
-      name: "Manager",
-      icon: Users,
-      color: "bg-blue-50 text-blue-700 border-blue-200",
-      badgeColor: "bg-blue-100 text-blue-800",
-      permissions: [
-        "Team management",
-        "Project oversight",
-        "Report generation",
-        "Task assignment",
-        "Performance analytics",
-        "Resource allocation",
-        "Team scheduling",
-        "Budget tracking",
-      ],
-    },
-    {
-      name: "User",
-      icon: Eye,
-      color: "bg-green-50 text-green-700 border-green-200",
-      badgeColor: "bg-green-100 text-green-800",
-      permissions: [
-        "View assigned tasks",
-        "Update task status",
-        "Access personal dashboard",
-        "Submit time entries",
-        "View team calendar",
-        "Download reports",
-        "Profile management",
-        "Basic notifications",
-      ],
-    },
-  ]
-  useEffect(() => {
-    const loadPreferences = () => {
-      const stored = localStorage.getItem("preferences");
-
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          const {
-            currency,
-            date_format,
-            notify_browser,
-            notify_email,
-            notify_lead_alerts,
-            notify_task_reminders,
-            theme,
-            time_format,
-          } = parsed;
-
-          dispatch({
-            type: "SET_ALL",
-            payload: {
-              currency,
-              date_format,
-              notify_browser,
-              notify_email,
-              notify_lead_alerts,
-              notify_task_reminders,
-              theme,
-              time_format,
-            },
-          });
-        } catch (e) {
-          console.error("Failed to parse preferences from localStorage", e);
-        }
-      }
-    };
-     const fetchData = async () => {
-          
-          const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/details`,{
-            credentials:'include',
-            headers: {
-                'Content-Type': 'application/json',
-                'Cookie': token
-            }
-          }).then(async(res)=>{
-            const result = await res.json()
-            console.log(result[0][0])
-            setdata(result[0][0])
-            setloading(false);
-        }).catch((e)=>{console.error(e)})
-        }
-    fetchData()
-    loadPreferences();
-  }, []);
   return (
-        <div className="flex-1 flex flex-col  overflow-scroll bg-transparent" style={{scrollbarWidth:"none"}}>
+    <div className="container mx-auto  max-w-7xl">
         <Header/>
-        <div className="px-8 py-5">
       <div className="flex flex-col space-y-2 mb-6">
         <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
         <p className="text-muted-foreground">Manage your account settings and preferences.</p>
       </div>
-    
+
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 h-auto">
           <TabsTrigger value="profile" className="flex items-center gap-2 py-2">
@@ -173,10 +46,10 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
             <Users className="h-4 w-4" />
             <span className="hidden md:inline">Team</span>
           </TabsTrigger>
-          {/* <TabsTrigger value="workflow" className="flex items-center gap-2 py-2">
+          <TabsTrigger value="workflow" className="flex items-center gap-2 py-2">
             <Workflow className="h-4 w-4" />
             <span className="hidden md:inline">Workflow</span>
-          </TabsTrigger> */}
+          </TabsTrigger>
           <TabsTrigger value="general" className="flex items-center gap-2 py-2">
             <Globe className="h-4 w-4" />
             <span className="hidden md:inline">General</span>
@@ -185,8 +58,7 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
 
         {/* Profile Tab */}
         <TabsContent value="profile" className="space-y-6">
-
-          {!loading && <Card>
+          <Card>
             <CardHeader>
               <CardTitle>Profile Information</CardTitle>
               <CardDescription>Update your account profile information and email address.</CardDescription>
@@ -196,23 +68,23 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                 <div className="space-y-4 flex-1">
                   <div className="space-y-2">
                     <Label htmlFor="name">Name</Label>
-                    <Input id="name" defaultValue={data.username} />
+                    <Input id="name" defaultValue="Budiono Siregar" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" defaultValue={data.email} />
+                    <Input id="email" type="email" defaultValue="budiono.sire@gmail.com" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="title">Job Title</Label>
-                    <Input id="title" defaultValue={data.role} />
+                    <Input id="title" defaultValue="Sales Manager" />
                   </div>
                 </div>
-                {/* <div className="space-y-4 flex-1"> */}
-                  {/* <div className="space-y-2">
+                <div className="space-y-4 flex-1">
+                  <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" type="tel" defaultValue={data.phone} />
-                  </div> */}
-                  {/* <div className="space-y-2">
+                    <Input id="phone" type="tel" defaultValue="+1 (555) 123-4567" />
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="timezone">Timezone</Label>
                     <Select defaultValue="utc-7">
                       <SelectTrigger id="timezone">
@@ -246,8 +118,8 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                         <SelectItem value="utc+12">UTC+12:00</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div> */}
-                  {/* <div className="space-y-2">
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="language">Language</Label>
                     <Select defaultValue="en">
                       <SelectTrigger id="language">
@@ -263,19 +135,15 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                         <SelectItem value="ja">Japanese</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div> */}
-                {/* </div> */}
+                  </div>
+                </div>
               </div>
             </CardContent>
             <CardFooter className="flex justify-end gap-2">
               <Button variant="outline">Cancel</Button>
               <Button>Save Changes</Button>
             </CardFooter>
-          </Card>}
-          {loading && <div className="flex flex-row items-center gap-2 justify-center h-64">
-                        <Loader2 className="animate-spin h-5 w-5" />
-                        <span className="text-gray-500">Loading...</span>
-                      </div>}
+          </Card>
         </TabsContent>
 
         {/* Notifications Tab */}
@@ -294,8 +162,8 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                   </div>
                   <Switch
                     id="email-notifications"
-                    checked={preferences.notify_email}
-                    onCheckedChange={()=>dispatch({ type: "UPDATE", payload: { notify_email: !(preferences.notify_email) } })}
+                    checked={emailNotifications}
+                    onCheckedChange={setEmailNotifications}
                   />
                 </div>
                 <Separator />
@@ -308,25 +176,25 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                   </div>
                   <Switch
                     id="browser-notifications"
-                    checked={preferences.notify_browser}
-                    onCheckedChange={()=>dispatch({ type: "UPDATE", payload: { notify_browser: !(preferences.notify_browser) } })}
+                    checked={browserNotifications}
+                    onCheckedChange={setBrowserNotifications}
                   />
                 </div>
-                {/* <Separator /> */}
-                {/* <div className="flex items-center justify-between">
+                <Separator />
+                <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="weekly-reports">Weekly Reports</Label>
                     <p className="text-sm text-muted-foreground">Receive a weekly summary of your CRM activity.</p>
                   </div>
                   <Switch id="weekly-reports" checked={weeklyReports} onCheckedChange={setWeeklyReports} />
-                </div> */}
+                </div>
                 <Separator />
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="lead-alerts">Lead Alerts</Label>
                     <p className="text-sm text-muted-foreground">Get notified when new leads are assigned to you.</p>
                   </div>
-                  <Switch id="lead-alerts" checked={preferences.notify_lead_alerts} onCheckedChange={()=>dispatch({ type: "UPDATE", payload: { notify_lead_alerts: !(preferences.notify_lead_alerts) } })} />
+                  <Switch id="lead-alerts" checked={leadAlerts} onCheckedChange={setLeadAlerts} />
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
@@ -334,7 +202,7 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                     <Label htmlFor="task-reminders">Task Reminders</Label>
                     <p className="text-sm text-muted-foreground">Receive reminders for upcoming and overdue tasks.</p>
                   </div>
-                  <Switch id="task-reminders" checked={preferences.notify_task_reminders} onCheckedChange={()=>dispatch({ type: "UPDATE", payload: { notify_task_reminders: !(preferences.notify_task_reminders) } })} />
+                  <Switch id="task-reminders" checked={taskReminders} onCheckedChange={setTaskReminders} />
                 </div>
               </div>
             </CardContent>
@@ -356,7 +224,7 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="current-password">Current Password</Label>
-                  <Input id="current-password" type="password" defaultValue={data.password_hash} disabled={true}/>
+                  <Input id="current-password" type="password" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="new-password">New Password</Label>
@@ -368,7 +236,7 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                 </div>
               </div>
 
-              {/* <Separator className="my-4" />
+              <Separator className="my-4" />
 
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Two-Factor Authentication</h3>
@@ -384,11 +252,11 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                     Not Enabled
                   </Badge>
                 </div>
-              </div> */}
+              </div>
 
-              {/* <Separator className="my-4" /> */}
+              <Separator className="my-4" />
 
-              {/* <div className="space-y-4">
+              <div className="space-y-4">
                 <h3 className="text-lg font-medium">Login Sessions</h3>
                 <p className="text-sm text-muted-foreground">
                   Manage your active sessions and sign out from other devices.
@@ -417,7 +285,7 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                     </div>
                   </div>
                 </div>
-              </div> */}
+              </div>
             </CardContent>
             <CardFooter className="flex justify-end gap-2">
               <Button variant="outline">Cancel</Button>
@@ -431,18 +299,18 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
           <Card>
             <CardHeader>
               <CardTitle>Team Management</CardTitle>
-              <CardDescription>Here are the permissions for the following available roles:</CardDescription>
+              <CardDescription>Manage your team members and their access permissions.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium">Team Members</h3>
                 <Button size="sm" className="gap-2">
                   <Users className="h-4 w-4" />
                   Invite Member
                 </Button>
-              </div> */}
+              </div>
 
-              {/* <div className="space-y-4">
+              <div className="space-y-4">
                 <div className="rounded-md border p-4">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-4">
@@ -507,9 +375,9 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                 </div>
               </div>
 
-              <Separator className="my-4" /> */}
+              <Separator className="my-4" />
 
-              {/* <div className="space-y-4">
+              <div className="space-y-4">
                 <h3 className="text-lg font-medium">Role Permissions</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="rounded-md border p-4 space-y-2">
@@ -525,49 +393,16 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                     <p className="text-sm text-muted-foreground">Read-only access to data</p>
                   </div>
                 </div>
-              </div> */}
-
-
-              {roles.map((role) => {
-          const IconComponent = role.icon
-          return (
-            <Card
-              key={role.name}
-              className={`relative overflow-hidden transition-all duration-200 hover:shadow-lg ${role.color}`}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <IconComponent className="h-5 w-5" />
-                    <CardTitle className="text-lg">{role.name}</CardTitle>
-                  </div>
-                  <Badge variant="secondary" className={role.badgeColor}>
-                    {role.permissions.length} permissions
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <ul className="space-y-2">
-                  {role.permissions.map((permission, index) => (
-                    <li key={index} className="flex items-start space-x-2 text-sm">
-                      <div className="w-1.5 h-1.5 rounded-full bg-current mt-2 flex-shrink-0" />
-                      <span className="leading-relaxed">{permission}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          )
-        })}
+              </div>
             </CardContent>
-            {/* <CardFooter className="flex justify-end gap-2">
+            <CardFooter className="flex justify-end gap-2">
               <Button>Save Changes</Button>
-            </CardFooter> */}
+            </CardFooter>
           </Card>
         </TabsContent>
 
         {/* Workflow Tab */}
-        {/* <TabsContent value="workflow" className="space-y-6">
+        <TabsContent value="workflow" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Workflow Settings</CardTitle>
@@ -663,7 +498,7 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
               <Button>Save Changes</Button>
             </CardFooter>
           </Card>
-        </TabsContent> */}
+        </TabsContent>
 
         {/* General Tab */}
         <TabsContent value="general" className="space-y-6">
@@ -681,7 +516,7 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                       Choose how dates are displayed throughout the application.
                     </p>
                   </div>
-                  <Select defaultValue={preferences?.date_format}>
+                  <Select defaultValue="mm-dd-yyyy">
                     <SelectTrigger className="w-40">
                       <SelectValue placeholder="Date Format" />
                     </SelectTrigger>
@@ -702,7 +537,7 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                       Choose how time is displayed throughout the application.
                     </p>
                   </div>
-                    <Select defaultValue={preferences?.time_format || "24h"}>
+                  <Select defaultValue="12h">
                     <SelectTrigger className="w-40">
                       <SelectValue placeholder="Time Format" />
                     </SelectTrigger>
@@ -722,7 +557,7 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                       Set the default currency for deals and transactions.
                     </p>
                   </div>
-                    <Select defaultValue={preferences?.currency?.toLowerCase() || "usd"}>
+                  <Select defaultValue="usd">
                     <SelectTrigger className="w-40">
                       <SelectValue placeholder="Currency" />
                     </SelectTrigger>
@@ -744,7 +579,7 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                     <Label>Theme</Label>
                     <p className="text-sm text-muted-foreground">Choose the application theme.</p>
                   </div>
-                  <Select defaultValue={preferences?.theme || "light"}>
+                  <Select defaultValue="system">
                     <SelectTrigger className="w-40">
                       <SelectValue placeholder="Theme" />
                     </SelectTrigger>
@@ -763,12 +598,12 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                     <Label htmlFor="auto-refresh">Auto Refresh</Label>
                     <p className="text-sm text-muted-foreground">Automatically refresh data every 5 minutes.</p>
                   </div>
-                  <Switch id="auto-refresh" defaultChecked={preferences?.notify_browser ?? true} />
+                  <Switch id="auto-refresh" defaultChecked />
                 </div>
 
                 <Separator />
 
-                {/* <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="analytics">Usage Analytics</Label>
                     <p className="text-sm text-muted-foreground">
@@ -776,7 +611,7 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                     </p>
                   </div>
                   <Switch id="analytics" defaultChecked />
-                </div> */}
+                </div>
               </div>
 
               <Separator className="my-4" />
@@ -804,7 +639,6 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
           </Card>
         </TabsContent>
       </Tabs>
-      </div>
     </div>
   )
 }

@@ -27,6 +27,11 @@ import {
   getCoreRowModel,
   getPaginationRowModel,
   useReactTable,
+  getFilteredRowModel,
+  SortingState,
+  VisibilityState,
+  ColumnFiltersState,
+  getSortedRowModel
 } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -53,8 +58,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useState } from "react"
-import { Button } from "@/components/ui/button" // For pagination buttons
-import { ChevronDown, ChevronLeft, ChevronRight,PencilIcon,BoxSelect,EllipsisVertical } from "lucide-react" // Optional icons
+import { Button } from "@/components/ui/button" 
+import { Addfield,CrmAccountsModal,CrmContactModal } from "@/components/forms"
+import { ChevronDown, ChevronLeft, ChevronRight,FilterIcon,X,Columns3 } from "lucide-react" 
+import { CrmContactEditModal } from "@/components/forms";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -66,13 +73,44 @@ export function DataTable<TData, TValue>({
   data,
 }: DataTableProps<TData, TValue>) {
     const [select, setselect] = useState<string[]>([])
+    const [opendialog,setopendialog] = useState<boolean>(false)
+    const [addfield, setaddfield] = useState<number>(0)
+    const [typing, settyping] = useState<string>('')
+    const [refresh,setrefresh] = useState<boolean>(false);
+    const [sorting,setSorting] = useState<SortingState>([])
+    const [columnVisibility, setColumnVisibility] =useState<VisibilityState>({})
+    const [searchTerm, setSearchTerm] = useState<ColumnFiltersState>([])
+    const globalFilterFn = (row: any, columnId: string, filterValue: string) => {
+    const search = String(filterValue || '').toLowerCase();
+    const columns = ["email", "first_name","last_name","phone"];
+    const valuesToSearch = columns.map(column => {
+      try {
+        return row.getValue(column);
+      } catch {
+        return '';
+      }
+    });
 
+    return valuesToSearch.some(value => 
+      String(value || '').toLowerCase().includes(search)
+    );
+};
   const table = useReactTable({
     data,
     columns,
-    
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(), // Add this line
+    getPaginationRowModel: getPaginationRowModel(), 
+    onSortingChange:setSorting,
+    getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel:getSortedRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
+    state:{
+      sorting,
+      columnVisibility,
+      globalFilter:searchTerm
+    },
+    onGlobalFilterChange:setSearchTerm,
+    globalFilterFn:globalFilterFn,
     enableColumnResizing: true,
     columnResizeMode: "onChange",
   })
@@ -90,7 +128,7 @@ export function DataTable<TData, TValue>({
     
     const fetchData = async () => {
       const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/${id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/contacts/${id}`, {
         method: 'DELETE',
         credentials: 'include',
         headers: {
@@ -105,7 +143,7 @@ export function DataTable<TData, TValue>({
       }
     }
     fetchData();
-    setselect([]);
+    window.location.reload();    
   }
   const exportdata = (data:string[])=>{
     const fetchData = async () => {
@@ -157,7 +195,7 @@ export function DataTable<TData, TValue>({
           <TableCell key={cell.id} >
               <div className={`flex items-center gap-2`} style={{ marginLeft: child && idx === 0 ? `${depthin * 12}px` : 0 }}>
                 {idx==0 && <Checkbox
-                  className="w-4 h-4 cursor-pointer"
+                  className="w-4 h-4 mr-2 cursor-pointer"
                   checked={select.includes(cell.getValue() as string)}
                   onCheckedChange={(checked:boolean)=>{
                   setselect(checked ? [...select, cell.getValue() as string] : select.filter(s => s !== cell.getValue()))
@@ -177,9 +215,89 @@ export function DataTable<TData, TValue>({
 }
   return (
     <div className="rounded-md ">
+      <div className="flex flex-col sm:flex-row  justify-between items-start sm:items-center gap-4 mb-4">
+                            <div className="flex flex-row items-center gap-2 w-full sm:w-1/4  rounded-md bg-transparent px-2">
+                                                          <input
+                                                            type="input"
+                                                            placeholder="Search contacts..."
+                                                            value={typing}
+                                                            onChange={(event) => {
+                                                              settyping(event.target.value);
+                                                              table.setGlobalFilter(event.target.value);
+                                                            }}
+                                                            className="w-full px-3 py-2 rounded-md border-input bg-transparent border-b focus:outline-none focus:border-emerald-500 focus:ring-0"
+                                                          />
+                                                          {typing.length !== 0 && <div>
+                                                            <button className="h-8 w-5 rounded-md cursor-pointer flex justify-center items-center bg-transparent"
+                                                            onClick={() => {
+                                                              settyping('');
+                                                              table.setGlobalFilter('');
+                                                            }}>
+                                                              <X className="h-4 w-4"/>
+                                                            </button>
+                                                          </div>}
+                                                          <Button variant="outline">
+                                                            Filter
+                                                            <FilterIcon className="h-4 w-4 ml-2"/>
+                                                          </Button>
+                                                        </div>
+                            <div className="flex gap-2">
+                                
+                             
+                                <Dialog open={opendialog} onOpenChange={setopendialog}>
+                                    <DialogTrigger asChild>
+                                        <Button variant="outline">
+                                            Columns
+                                            <Columns3 className="h-4 w-4 ml-2"/>
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-[425px]">
+                                        <DialogHeader>
+                                            <DialogTitle>Manage Columns</DialogTitle>
+                                            <DialogDescription>
+                                                Select which columns you want to display in the table.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        {table
+                                          .getAllColumns()
+                                          .filter(
+                                            (column) => column.getCanHide()
+                                          )
+                                          .map((column,idx) => {
+                                            return (
+                                          
+                                              <div
+                                                key={`${idx}`}
+                                                className="flex items-center space-x-2 capitalize px-4 py-2 cursor-pointer hover:bg-gray-100 border"
+                                                onClick={() => column.toggleVisibility(!column.getIsVisible())}
+                                              >
+                                                <Checkbox
+                                                  checked={column.getIsVisible()}
+                                              
+                                                  onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                                                />
+                                                <span>{column.id}</span>
+                                              </div>
+                                            )
+                                          })}
+                                        <MenubarSeparator />
+                                          {addfield==1 && <Addfield/>}
+                                          <Button variant="outline" onClick={()=>{
+                                            addfield==0?setaddfield(1):setaddfield(0)
+                                          }} className={`${addfield==1?'hidden':'flex'}`}>Add Field</Button>
+                                          <Button onClick={()=>{
+                                            setopendialog(false)
+                                          }} className={`${addfield==1?'hidden':'flex'}`}>Close</Button>
+                                          
+                                    </DialogContent>
+                                </Dialog>
+                                <CrmContactModal/>
+                            </div>
+                            
+                        </div>
       {select.length==1 && <div className="flex flex-col sm:flex-row  justify-between items-start sm:items-center gap-4 mb-4">
                             <div className="flex flex-row items-center gap-4 w-full sm:w-1/4  rounded-md bg-transparent px-4">
-                             <button className="cursor-pointer hover:underline text-emerald-600">Edit</button>
+                             <CrmContactEditModal data={table.getCoreRowModel().rows.filter(row=>row.getValue('id')===select[0])}/>
                            <AlertDialog>
                             <AlertDialogTrigger> 
                               <button className="cursor-pointer hover:underline text-red-600">Delete</button>
@@ -194,7 +312,11 @@ export function DataTable<TData, TValue>({
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction>Continue</AlertDialogAction>
+                                <AlertDialogAction onClick={()=>{
+                                     
+                                    deleteId(select[0])
+                                    setrefresh(!refresh)
+                                  }}>Continue</AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>

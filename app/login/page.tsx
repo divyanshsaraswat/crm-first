@@ -24,9 +24,9 @@ export default function LoginPage() {
     })
 
     if (result.ok) {
-      window.location.href = "/users"
+      window.location.href = "/contacts"
     } else {
-      const data = await result.json()
+      const data = await result.json() 
       alert(data.message || 'Login failed')
     }
   }

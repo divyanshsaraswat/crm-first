@@ -1,7 +1,8 @@
 'use client'
 import {motion} from "motion/react";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils"
-import { Pill, UserCheck2, LucideContact2, Pen, Tag, Settings,ChevronDown,ChevronRight,Bell,ChevronsUpDownIcon, LucideGroup, PencilIcon, NotebookPenIcon } from "lucide-react";
+import { Pill, UserCheck2, LucideContact2, Pen, Tag, Settings,ChevronDown,ChevronRight,Bell,ChevronsUpDownIcon, LucideGroup, PencilIcon, NotebookPenIcon, Building2, User2Icon, LockIcon, UserCircle2, ArrowLeftToLine, Navigation, NavigationIcon, SquareArrowOutUpLeft } from "lucide-react";
 import { DropdownMenu,DropdownMenuTrigger,DropdownMenuContent,DropdownMenuItem } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -20,61 +21,118 @@ interface UserData {
 
 export default function Sidebar() {
       const [expanded, setExpanded] = useState(false)
+      const [locked,setlocked]  = useState(false)
       const [isMobile, setIsMobile] = useState(false)
       const [active, setActive] = useState<number>(0)
       const router = useRouter()
-    useEffect(() => {
-        const checkIfMobile = () => {
-          setIsMobile(window.innerWidth < 1024)
-          if (window.innerWidth < 1024) {
-            setExpanded(false)
-          } else {
-            setExpanded(false)
-          }
-        }
+   
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+      if (window.innerWidth < 1024) {
+        setExpanded(false);
+      } else {
+        setExpanded(false);
+      }
+    };
 
+    const PreferencesSet = async () => {
+      try {
+        const token = await fetch(`/api/session`)
+          .then((res:any) => res?.token)
+          .catch((e) => console.error(e));
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/settings`, {
+          credentials:"include",
+          method:'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Cookie:token
+          },
+        });
+        const result = await res.json();
+        console.log(result);
+        const {
+      currency,
+      date_format,
+      notify_browser,
+      notify_email,
+      notify_lead_alerts,
+      notify_task_reminders,
+      theme,
+      time_format,
+    } = result[0][0];
 
-      
-        // Initial check
-        checkIfMobile();
-    
-        // Add event listener
-        window.addEventListener("resize", checkIfMobile)
-    
-        // Cleanup
-        return () => window.removeEventListener("resize", checkIfMobile)
-      }, [])
+    const preferences = {
+      currency,
+      date_format,
+      notify_browser,
+      notify_email,
+      notify_lead_alerts,
+      notify_task_reminders,
+      theme,
+      time_format,
+    };
+
+    localStorage.setItem("preferences", JSON.stringify(preferences));
+      } catch (e) {
+        console.error('Error fetching preferences:', e);
+        return null;
+      }
+    };
+
+    checkIfMobile();
+    PreferencesSet();
+    window.addEventListener("resize", checkIfMobile);
+
+    const pathname = window.location.pathname;
+    const navItems = [
+      { name: "Contacts", route: "/accounts", num: 0 },
+      { name: "Tasks", route: "/tasks", num: 1 },
+      { name: "Reports", route: "/reports", num: 2 },
+      { name: "Settings", route: "/settings", num: 3 },
+      { name: "Users", route:'/users', num:4}
+    ];
+
+    const match = navItems.find(item => pathname.startsWith(item.route));
+    if (match) {
+      setActive(match.num);
+    }
+
+    return () => window.removeEventListener("resize", checkIfMobile);
+  }, []);
     return(
         <>
          <motion.aside
         className={cn(
-          "static h-full hidden md:block bg-transparent text-white transition-all duration-300 ease-in-out z-10",
-          expanded ? "w-64" : "w-16",
+          "static h-full hidden md:block bg-transparent text-white transition-all duration-300 ease-in-out z-10 h-screen",
+          expanded || locked ? "w-64" : "w-16",
         )}
         initial={false}
-        animate={{ width: expanded ? 256 : 64 }}
+        animate={{ width: expanded || locked ? 256 : 64 }}
         transition={{ duration: 0.1, ease: "easeInOut" }}
-        onHoverStart={() => !isMobile && setExpanded(true)}
-        onHoverEnd={() => !isMobile && setExpanded(false)}
-      >
+        onHoverStart={() => !isMobile || !locked?setExpanded(true):null}
+        onHoverEnd={() => !isMobile || !locked?setExpanded(false):null}
+        >
         {/* Logo */}
-        <div className="flex items-center p-4 h-16 bg-transparent">
+        <div className="flex items-center p-4 h-16 bg-transparent justify-between">
           <div className="flex items-center gap-3 overflow-hidden">
             <div className="flex-shrink-0 bg-emerald-700 p-2 rounded-full">
               <LucideGroup className="h-4 w-4 text-white" />
             </div>
             <motion.span
               className="font-bold text-xl whitespace-nowrap text-emerald-700"
-              animate={{ opacity: expanded ? 1 : 0 }}
+              animate={{ opacity: expanded || locked ? 1 : 0 }}
               transition={{ duration: 0.1 }}
             >
               CRM First
             </motion.span>
+
           </div>
+            <button className={`${locked?'text-black':'text-gray-300'} ${expanded ||locked?'flex':'hidden'} cursor-pointer`} onClick={()=>setlocked(!locked)}><SquareArrowOutUpLeft size={20} /></button>
         </div>
 
         {/* Menu Header */}
-        <div className="px-4 py-8">
+        <div className="px-4 py-8 flex justify-end w-full ">
           <motion.p
             className="text-xs font-semibold text-emerald-300 mb-2"
             animate={{ opacity: expanded ? 1 : 0 }}
@@ -83,16 +141,14 @@ export default function Sidebar() {
            
           </motion.p>
         </div>
-
         {/* Navigation */}
         <nav className="space-y-2 px-2">
           {[
-            { name: "Users", icon: <UserCheck2 className="h-5 w-5"/>, num:0,route:"/users" },
-            { name: "Contacts", icon: <LucideContact2 className="h-5 w-5 color-emerald-800" />, num:1,route:"/contacts" },
-            { name: "Tasks", icon: <Pen className="h-5 w-5 color-emerald-800" />, num:2,route:"/users" },
-            { name: "Leads", icon: <Tag className="h-5 w-5 color-emerald-800" />, num:3,route:"/users" },
-            { name: "Reports", icon: <NotebookPenIcon className="h-5 w-5 color-emerald-800" />, num:4,route:"/users" },
-            { name: "Settings", icon: <Settings className="h-5 w-5 color-emerald-800" />, num:5,route:"/settings" },
+            { name: "Contacts", icon: <UserCircle2 className="h-5 w-5 color-emerald-800" />, num:0,route:"/accounts" },
+            { name: "Tasks", icon: <Pen className="h-5 w-5 color-emerald-800" />, num:1,route:"/tasks" },
+            { name: "Reports", icon: <NotebookPenIcon className="h-5 w-5 color-emerald-800" />, num:2,route:"/reports" },
+            { name: "Settings", icon: <Settings className="h-5 w-5 color-emerald-800" />, num:3,route:"/settings" },
+            { name: "Users", icon: <User2Icon className="h-5 w-5 color-emerald-800" />, num:4,route:"/users" },
           ].map((item) => (
             <motion.button
               key={item.name}
@@ -110,8 +166,8 @@ export default function Sidebar() {
             >
               <span className="flex-shrink-0">{item.icon}</span>
               <motion.span
-                className={cn("ml-3 whitespace-nowrap ", expanded ? "opacity-100" : "opacity-0")}
-                animate={{ opacity: expanded ? 1 : 0, x: expanded ? 0 : -10 }}
+                className={cn("ml-3 whitespace-nowrap ", expanded || locked ? "opacity-100" : "opacity-0")}
+                animate={{ opacity: expanded || locked ? 1 : 0, x: expanded || locked ? 0 : -10 }}
                 transition={{ duration: 0.5 }}
               >
                 {item.name}
@@ -183,13 +239,13 @@ export function Header(){
                 {expanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
               </button>
             )} */}
-            <motion.span
+            {/* <motion.span
               className="font-bold text-xl whitespace-nowrap text-emerald-700"
               
           
             >
               CRM First
-            </motion.span>
+            </motion.span> */}
           </h1>
 
           <div className="flex items-center gap-4 ">
@@ -253,6 +309,7 @@ export function Header(){
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-fit md:w-56 backdrop-blur-md bg-white/20 border border-white/30 rounded-xl shadow-md">
                 
+                <DropdownMenuItem className="cursor-pointer hover:bg-grey-700 p-2" onClick={()=>router.push('/users')}>Manage Team</DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer hover:bg-grey-700 p-2" onClick={()=>router.push('/settings')}>Profile</DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer text-red-800 hover:bg-grey-700 p-2" onClick={()=>logout()}>Logout</DropdownMenuItem>
               </DropdownMenuContent>

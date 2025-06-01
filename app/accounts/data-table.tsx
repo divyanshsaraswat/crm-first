@@ -10,8 +10,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Addfield, CrmUsersEditModal } from "@/components/forms"
-import { CrmUsersModal } from "@/components/forms"
+import { Addfield, CrmAccountsModal, CrmContactModal, CrmTaskModal, CrmUsersEditModal } from "@/components/forms"
+import { CrmAccountsEditModal } from "@/components/forms"
 import {
   Dialog,
   DialogContent,
@@ -55,8 +55,9 @@ import {
 } from "@/components/ui/table"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button" // For pagination buttons
-import { BoxSelect, ChevronDown, ChevronLeft, ChevronRight, Columns3,FilterIcon,X } from "lucide-react" // Optional icons
+import { BoxSelect, ChevronDown, ChevronLeft, ChevronRight, Columns3,FilterIcon,Plus,PlusCircleIcon,X } from "lucide-react" // Optional icons
 import { useRouter } from "next/navigation"
+import { Badge } from "@/components/ui/badge"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -70,15 +71,43 @@ export function DataTable<TData, TValue>({
   const [select, setselect] = useState<string[]>([])
   const router = useRouter();
   const [sorting,setSorting] = useState<SortingState>([])
-  const [columnVisibility, setColumnVisibility] =useState<VisibilityState>({})
+  const [columnVisibility, setColumnVisibility] =useState<VisibilityState>({
+  id:true,
+  name:true,
+  status_type:true,
+  source_type:true,
+  Rating:true,
+  ContPerson:true,
+  State:true,
+  phone:true,
+  email:true,
+  designation_name:true,
+  industry:false,
+  website:false,
+  assigned_user_id:false,
+  updated_at:false,
+  Zone:false,
+  Address1:false,
+  Address2:false,
+  City:false,
+  Zip:false,
+  Country:false,
+  waphone:false,
+  BusinessNature:false,
+  JoiningDate:false,
+  SourceID:false,
+  DesignationID:false,
+  StatusID:false,
+})
   const [searchTerm, setSearchTerm] = useState<ColumnFiltersState>([])
+  const [opendialog,setopendialog] = useState<boolean>(false);
   const [addfield, setaddfield] = useState<number>(0)
   const [loading, setloading] = useState<boolean>(false)
   const [typing, settyping] = useState<string>('')
   const [refresh,setrefresh] = useState<boolean>(false);
   const globalFilterFn = (row: any, columnId: string, filterValue: string) => {
     const search = String(filterValue || '').toLowerCase();
-    const columns = ["email", "username"];
+    const columns = ["name","ContPerson","email","phone"];
     const valuesToSearch = columns.map(column => {
       try {
         return row.getValue(column);
@@ -91,6 +120,21 @@ export function DataTable<TData, TValue>({
       String(value || '').toLowerCase().includes(search)
     );
 };
+
+  const statusbadges = (line: string) => {
+    const objec: { [key: string]: string } = {
+      "OPEN": "green",
+      "REJECT": "red", 
+      "HOLD": "yellow",
+      "COMPLETED": "transparent"
+    }
+    return (
+      <Badge variant="outline"  style={{background: objec[line] || 'transparent',color:line=='OPEN'?"white":"black"}}>
+      {line}
+      </Badge>
+    )
+   
+  }
 
   const table = useReactTable({
     data,
@@ -123,11 +167,11 @@ export function DataTable<TData, TValue>({
     const deleteId = (id:string) => {
       const fetchData = async () => {
         const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/${id}`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/accounts/${id}`, {
           method: 'DELETE',
           credentials: 'include',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json', 
             'Cookie': token
           },
         });
@@ -144,7 +188,7 @@ export function DataTable<TData, TValue>({
   const exportdata = (data:string[])=>{
     const fetchData = async () => {
       const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/export`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/accounts/export`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -176,63 +220,35 @@ export function DataTable<TData, TValue>({
     let depthin = depth||0;
   return (
     <>
+   
       <TableRow
         key={row.id}
         data-state={row.getIsSelected() && "selected"}
         className="border"
-      >
-        {row.getVisibleCells().map((cell: any, idx: number) => (
-          <TableCell key={cell.id}>
-            <div
-              className={`flex items-center gap-1`}
-              style={{
-                marginLeft: child && idx === 0 ? `${depthin * 12}px` : 0,
-              }}
-            >
-              {idx == 0 && (
-                <Checkbox
-                  className="w-4 h-4 cursor-pointer"
-                  checked={select.includes(cell.getValue() as string)}
-                  onCheckedChange={(checked: boolean) => {
-                    setselect(
-                      checked
-                        ? [...select, cell.getValue() as string]
-                        : select.filter((s) => s !== cell.getValue())
-                    );
-                  }}
-                />
-              )}
-              {idx == 0 ? (
-                <button
-                  className="cursor-pointer"
-                  onClick={() => setIsOpen(!isOpen)}
-                >
-                  {isOpen ? (
-                    <ChevronDown className="w-4 h-4" />
-                  ) : (
-                    <ChevronRight className="w-4 h-4"></ChevronRight>
-                  )}
-                </button>
-              ) : (
-                ""
-              )}
+        
 
-              {cell.column.id === "created_at"
-                ? new Date(cell.getValue() as string).toLocaleString("en-IN", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: true,
-                  timeZone: "Asia/Kolkata"
-                })
+      >
+        {row.getVisibleCells().map((cell:any, idx:number) => (
+          <TableCell key={cell.id}>
+              <div className={`flex items-center gap-1`} style={{ marginLeft: child && idx === 0 ? `${depthin * 12}px` : 0 }}>
+                {idx==0 && <Checkbox
+                  className="w-4 h-4 mr-2 cursor-pointer"
+                  checked={select.includes(cell.getValue() as string)}
+                  onCheckedChange={(checked:boolean)=>{
+                    setselect(checked ? [...select, cell.getValue() as string] : select.filter(s => s !== cell.getValue()))
+                  }}
+                />}
+              {idx==0?<button className="cursor-pointer" onClick={()=>setIsOpen(!isOpen)}>{isOpen?<ChevronDown className="w-4 h-4"/>:<ChevronRight className="w-4 h-4"></ChevronRight>}</button>:""}
+
+              {cell.column.id === 'status_type' 
+                ? statusbadges(cell.getValue() as string)
                 : flexRender(cell.column.columnDef.cell, cell.getContext())}
-            </div>
+              
+              </div>
           </TableCell>
         ))}
       </TableRow>
-      {isOpen && <CustomTableRow row={row} child={true} depth={depthin + 1} />}
+      {isOpen && <CustomTableRow  row={row} child={true} depth={depthin+1} />}
     </>
   );
 }
@@ -240,38 +256,41 @@ export function DataTable<TData, TValue>({
     <div className="rounded-md ">
       <div className="flex flex-col sm:flex-row  justify-between items-start sm:items-center gap-4 mb-4">
                             <div className="flex flex-row items-center gap-2 w-full sm:w-1/4  rounded-md bg-transparent px-2">
-                                <input
-                                    type="input"
-                                    placeholder="Search users..."
-                                     value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-                                    onChange={(event) =>
-                                      table.getColumn("email")?.setFilterValue(event.target.value)
-                                    }
-                                    className="w-full px-3 py-2 rounded-md border-input bg-transparent border-b focus:outline-none focus:border-emerald-500 focus:ring-0"
-                                />
-                                {typing.length!=0 && <div>
-                                    <button className="h-8 w-5 rounded-md cursor-pointer flex justify-center items-center bg-transparent"
-                                    onClick={() => settyping('')}>
-                                        <X className="h-4 w-4"/>
-                                    </button>
-                                </div>}
-                                <Button variant="outline">
-                                    Filter
-                                    <FilterIcon className="h-4 w-4 ml-2"/>
-                                </Button>
-                               
+                              <input
+                                type="input"
+                                placeholder="Search accounts..."
+                                value={typing}
+                                onChange={(event) => {
+                                  settyping(event.target.value);
+                                  table.setGlobalFilter(event.target.value);
+                                }}
+                                className="w-full px-3 py-2 rounded-md border-input bg-transparent border-b focus:outline-none focus:border-emerald-500 focus:ring-0"
+                              />
+                              {typing.length !== 0 && <div>
+                                <button className="h-8 w-5 rounded-md cursor-pointer flex justify-center items-center bg-transparent"
+                                onClick={() => {
+                                  settyping('');
+                                  table.setGlobalFilter('');
+                                }}>
+                                  <X className="h-4 w-4"/>
+                                </button>
+                              </div>}
+                              <Button variant="outline">
+                                Filter
+                                <FilterIcon className="h-4 w-4 ml-2"/>
+                              </Button>
                             </div>
                             <div className="flex gap-2">
                                 
                              
-                                <Dialog>
+                                <Dialog open={opendialog} onOpenChange={setopendialog}>
                                     <DialogTrigger asChild>
                                         <Button variant="outline">
                                             Columns
                                             <Columns3 className="h-4 w-4 ml-2"/>
                                         </Button>
                                     </DialogTrigger>
-                                    <DialogContent className="sm:max-w-[425px]">
+                                    <DialogContent className="sm:max-w-[425px] max-h-[550px] overflow-y-scroll">
                                         <DialogHeader>
                                             <DialogTitle>Manage Columns</DialogTitle>
                                             <DialogDescription>
@@ -302,19 +321,22 @@ export function DataTable<TData, TValue>({
                                           })}
                                         <MenubarSeparator />
                                           {addfield==1 && <Addfield/>}
-                                          <Button onClick={()=>{
+                                         <Button variant="outline" onClick={()=>{
                                             addfield==0?setaddfield(1):setaddfield(0)
                                           }} className={`${addfield==1?'hidden':'flex'}`}>Add Field</Button>
+                                          <Button onClick={()=>{
+                                            setopendialog(false)
+                                          }} className={`${addfield==1?'hidden':'flex'}`}>Close</Button>
                                           
                                     </DialogContent>
                                 </Dialog>
-                                <CrmUsersModal/>
+                                <CrmAccountsModal/>
                             </div>
                             
                         </div>
        {select.length==1 && <div className="flex flex-col sm:flex-row  justify-between items-start sm:items-center gap-4 mb-4">
                             <div className="flex flex-row items-center gap-4 w-full sm:w-1/4  rounded-md bg-transparent px-4">
-                             <CrmUsersEditModal data={table.getCoreRowModel().rows.filter(row=>row.getValue('id')===select[0])}/>
+                             <CrmAccountsEditModal data={table.getCoreRowModel().rows.filter(row=>row.getValue('id')===select[0])}/>
                              <AlertDialog>
                                 <AlertDialogTrigger> 
                                   <button className="cursor-pointer hover:underline text-red-600">Delete</button>
@@ -338,6 +360,7 @@ export function DataTable<TData, TValue>({
                                 </AlertDialogContent>
                               </AlertDialog>
                              <div className="text-gray-300">|</div>
+                             <CrmTaskModal data={table.getCoreRowModel().rows.filter(row=>row.getValue('id')===select[0])} />
                             <Dialog>
                             <DialogTrigger>    
                                 <button className="cursor-pointer hover:underline text-emerald-600" onClick={()=>exportdata(select)}>Export</button>
@@ -350,7 +373,9 @@ export function DataTable<TData, TValue>({
                                 <div className="italic text-center">Downloading...</div>
 
                             </DialogContent>
-                          </Dialog>                            
+                          </Dialog>    
+
+                                                      
                           </div>
                          
                             
@@ -374,6 +399,7 @@ export function DataTable<TData, TValue>({
                            </div>
                             </div>
 }
+
       <Table className="bg-white dark:bg-inherit border">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
