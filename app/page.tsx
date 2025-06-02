@@ -129,7 +129,7 @@ function StatsCard({ title, value, change, trend, color }:any) {
   )
 }
 
-function DonutChart({ value }) {
+function DonutChart({ value }:any) {
   const percentage = value / 10
   const circumference = 2 * Math.PI * 50
   const offset = circumference - (percentage / 100) * circumference
