@@ -25,14 +25,17 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { cn } from "@/lib/utils"
 import { motion } from "motion/react"
 import { Header } from "@/components/sidebar"
+import { useRouter } from "next/navigation"
 
 export default function Dashboard() {
+  const router = useRouter();
   const [expanded, setExpanded] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
   const [active, setActive] = useState<number>(0)
   // Check if mobile on mount and when window resizes
   useEffect(() => {
     const checkIfMobile = () => {
+      router.push('/accounts');
       setIsMobile(window.innerWidth < 1024)
       if (window.innerWidth < 1024) {
         setExpanded(false)
