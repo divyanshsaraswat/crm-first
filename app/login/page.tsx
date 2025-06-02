@@ -1,7 +1,8 @@
 "use client"
-import { LoaderIcon } from "lucide-react"
+import { AlertCircle, LoaderIcon } from "lucide-react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import type React from "react"
 
 export default function LoginPage() {
@@ -11,7 +12,7 @@ export default function LoginPage() {
     password: "",
   })
   const [login, setLogin] = useState(false)
-
+  const [failed,setfailed] = useState(false)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLogin(true)
@@ -26,13 +27,21 @@ export default function LoginPage() {
     if (result.ok) {
       window.location.href = "/contacts"
     } else {
-      const data = await result.json() 
-      alert(data.message || 'Login failed')
+      setLogin(false);
+      setfailed(true);
+
     }
   }
 
   return (
-    <div className="min-h-screen min-w-screen flex items-center justify-center">
+    <div className="min-h-screen min-w-screen flex flex-col gap-5 items-center justify-center">
+     {!login && failed &&  <Alert variant="destructive" className="w-96">
+      <AlertCircle/>
+      <AlertTitle>Login Failed!</AlertTitle>
+      <AlertDescription>
+       Your login credentials are incorrect , please try again!
+      </AlertDescription>
+    </Alert>}
       <div className="bg-white p-8 rounded-lg shadow-md w-96">
       <h1 className="text-xl font-medium mb-6">Log in</h1>
       {login && <div className="flex flex-col gap-2 w-full items-center justify-center">
@@ -81,7 +90,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-4 text-center text-sm">
+        {/* <div className="mt-4 text-center text-sm">
           <a href="#" className="text-gray-600 hover:underline">
             Create new account
           </a>
@@ -89,9 +98,9 @@ export default function LoginPage() {
           <a href="#" className="text-gray-600 hover:underline">
             Forgot password
           </a>
-        </div>
+        </div> */}
 
-        <div className="mt-6">
+        {/* <div className="mt-6">
           <div className="text-center text-sm text-gray-500 mb-3">Or continue with</div>
 
           <button
@@ -128,7 +137,7 @@ export default function LoginPage() {
             Sign In With Apple
           </button>
 
-        </div>
+        </div> */}
         </div>}
       </div>
     </div>
