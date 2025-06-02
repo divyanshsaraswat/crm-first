@@ -225,7 +225,7 @@ const statusbadges = (line: string) => {
                   day: "2-digit",
                   hour: "2-digit",
                   minute: "2-digit",
-                  hour12: true,
+                  hour12:JSON.parse(localStorage.getItem('preferences') || '{}').time_format === '12h',
                   timeZone: "Asia/Kolkata"
                 })
               ) : (

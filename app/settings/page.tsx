@@ -12,6 +12,9 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Bell, Globe, Lock, Mail, Shield, User, Users, Workflow,Eye,Loader2 } from "lucide-react"
 import { Header } from "@/components/sidebar"
+import e from "express"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 type Preferences = {
   currency?: string;
@@ -38,9 +41,79 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
       return state;
   }
 };
+ const router = useRouter();
  const [preferences, dispatch] = useReducer(preferencesReducer, {});
  const [data,setdata] = useState<any>({});
+ const [pass,setpass] = useState<string>();
+ const [cpass,setcpass] = useState<string>();
  const [loading,setloading] = useState<boolean>(true);
+ const saveprofile = async(values:any)=>{
+   const fetchData = async () => {
+          console.log({...values,id:data?.id});
+          const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/`,{
+            credentials:'include',
+            method:"PUT",
+            headers: {
+                'Content-Type': 'application/json',
+                'Cookie': token
+            },
+            body: JSON.stringify({...values,id:data?.id})
+          }).then(async(res)=>{
+            toast("✅ Data Updated Successfully.")
+        }).catch((e)=>{console.error(e)})
+        }
+    fetchData();
+ }
+ const forgotpassword = async(values:any)=>{
+   const fetchData = async () => {
+          const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/forgot`,{
+            credentials:'include',
+            method:"POST",
+            headers: {
+                'Content-Type': 'application/json',
+                'Cookie': token
+            },
+            body: JSON.stringify(values)
+          }).then(async(res)=>{
+            if (res.status==200){
+
+              toast("✅ Password Updated Successfully.")
+            }
+            if (res.status==403){
+              toast("❌ Current Password is incorrect.");
+                
+            }
+        }).catch((e)=>{console.error(e)})
+        }
+    fetchData();
+ }
+ const savepreferences = async(values:any)=>{
+   const fetchData = async () => {
+          const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/settings`,{
+            credentials:'include',
+            method:"PUT",
+            headers: {
+                'Content-Type': 'application/json',
+                'Cookie': token
+            },
+            body: JSON.stringify(preferences)
+          }).then(async(res)=>{
+            if (res.status==200){
+
+              toast("✅ Saved Successfully.")
+            }
+            else{
+              toast("❌ Some Error Occured.");
+                
+            }
+        }).catch((e)=>{console.error(e)})
+        }
+    console.log("Preferences",preferences);
+    fetchData();
+ }
   const roles = [
     {
       name: "Admin",
@@ -192,86 +265,61 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
               <CardDescription>Update your account profile information and email address.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex flex-col md:flex-row gap-6">
+                <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const values = {
+                  username: formData.get('name'),
+                  email: formData.get('email'),
+                  role: formData.get('title')
+                };
+                saveprofile(values);
+                }} className="space-y-6">
+
+                <div className="flex flex-col md:flex-row gap-6">
                 <div className="space-y-4 flex-1">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
-                    <Input id="name" defaultValue={data.username} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" defaultValue={data.email} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Job Title</Label>
-                    <Input id="title" defaultValue={data.role} />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input 
+                  id="name" 
+                  name="name"
+                  defaultValue={data.username}
+                  required
+                  />
                 </div>
-                {/* <div className="space-y-4 flex-1"> */}
-                  {/* <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" type="tel" defaultValue={data.phone} />
-                  </div> */}
-                  {/* <div className="space-y-2">
-                    <Label htmlFor="timezone">Timezone</Label>
-                    <Select defaultValue="utc-7">
-                      <SelectTrigger id="timezone">
-                        <SelectValue placeholder="Select timezone" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="utc-12">UTC-12:00</SelectItem>
-                        <SelectItem value="utc-11">UTC-11:00</SelectItem>
-                        <SelectItem value="utc-10">UTC-10:00</SelectItem>
-                        <SelectItem value="utc-9">UTC-09:00</SelectItem>
-                        <SelectItem value="utc-8">UTC-08:00</SelectItem>
-                        <SelectItem value="utc-7">UTC-07:00</SelectItem>
-                        <SelectItem value="utc-6">UTC-06:00</SelectItem>
-                        <SelectItem value="utc-5">UTC-05:00</SelectItem>
-                        <SelectItem value="utc-4">UTC-04:00</SelectItem>
-                        <SelectItem value="utc-3">UTC-03:00</SelectItem>
-                        <SelectItem value="utc-2">UTC-02:00</SelectItem>
-                        <SelectItem value="utc-1">UTC-01:00</SelectItem>
-                        <SelectItem value="utc">UTC</SelectItem>
-                        <SelectItem value="utc+1">UTC+01:00</SelectItem>
-                        <SelectItem value="utc+2">UTC+02:00</SelectItem>
-                        <SelectItem value="utc+3">UTC+03:00</SelectItem>
-                        <SelectItem value="utc+4">UTC+04:00</SelectItem>
-                        <SelectItem value="utc+5">UTC+05:00</SelectItem>
-                        <SelectItem value="utc+6">UTC+06:00</SelectItem>
-                        <SelectItem value="utc+7">UTC+07:00</SelectItem>
-                        <SelectItem value="utc+8">UTC+08:00</SelectItem>
-                        <SelectItem value="utc+9">UTC+09:00</SelectItem>
-                        <SelectItem value="utc+10">UTC+10:00</SelectItem>
-                        <SelectItem value="utc+11">UTC+11:00</SelectItem>
-                        <SelectItem value="utc+12">UTC+12:00</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div> */}
-                  {/* <div className="space-y-2">
-                    <Label htmlFor="language">Language</Label>
-                    <Select defaultValue="en">
-                      <SelectTrigger id="language">
-                        <SelectValue placeholder="Select language" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="es">Spanish</SelectItem>
-                        <SelectItem value="fr">French</SelectItem>
-                        <SelectItem value="de">German</SelectItem>
-                        <SelectItem value="pt">Portuguese</SelectItem>
-                        <SelectItem value="zh">Chinese</SelectItem>
-                        <SelectItem value="ja">Japanese</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div> */}
-                {/* </div> */}
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input 
+                  id="email"
+                  name="email" 
+                  type="email" 
+                  defaultValue={data.email}
+                  required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="title">Job Title</Label>
+                  <Input 
+                  id="title"
+                  name="title"
+                  defaultValue={data.role}
+                  required
+                  />
+                </div>
+                </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => router.refresh()}>
+                Cancel
+                </Button>
+                <Button type="submit">
+                Save Changes
+                </Button>
+                </div>
+                </form>
             </CardContent>
-            <CardFooter className="flex justify-end gap-2">
-              <Button variant="outline">Cancel</Button>
-              <Button>Save Changes</Button>
-            </CardFooter>
-          </Card>}
+          </Card>
+          }
           {loading && <div className="flex flex-row items-center gap-2 justify-center h-64">
                         <Loader2 className="animate-spin h-5 w-5" />
                         <span className="text-gray-500">Loading...</span>
@@ -339,8 +387,8 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
               </div>
             </CardContent>
             <CardFooter className="flex justify-end gap-2">
-              <Button variant="outline">Reset to Default</Button>
-              <Button>Save Preferences</Button>
+              <Button variant="outline" onClick={()=>router.refresh()}>Reset to Default</Button>
+              <Button onClick={savepreferences}>Save Preferences</Button>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -353,76 +401,76 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
               <CardDescription>Manage your password and security settings.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              <form onSubmit={(e) => {
+              e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            const newPassword = formData.get('new-password')?.toString();
+            const confirmPassword = formData.get('confirm-password')?.toString();
+            const currentPassword = formData.get('current-password')?.toString();
+
+            if (!currentPassword?.trim()) {
+              toast("❌ Current password is required");
+              return;
+            }
+
+            if (!newPassword?.trim() || !confirmPassword?.trim()) {
+              toast("❌ New password and confirmation are required");
+              return;
+            }
+
+            if (newPassword !== confirmPassword) {
+              toast("❌ New Passwords do not match");
+              return;
+            }
+
+            if (newPassword.length < 6) {
+              toast("❌ New Password must be at least 6 characters long");
+              return;
+            }
+              const values = {
+                password: formData.get('confirm-password'),
+                oldpassword: formData.get('current-password'),
+                id: data?.id
+              };
+              forgotpassword(values);
+              }} className="space-y-6">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="current-password">Current Password</Label>
-                  <Input id="current-password" type="password" defaultValue={data.password_hash} disabled={true}/>
+                <Label htmlFor="current-password">Current Password</Label>
+                <Input 
+                  id="current-password" 
+                  name="current-password"
+                  type="password" 
+                  required
+                />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="new-password">New Password</Label>
-                  <Input id="new-password" type="password" />
+                <Label htmlFor="new-password">New Password</Label>
+                <Input 
+                  id="new-password" 
+                  name="new-password"
+                  type="password" 
+                  required
+                />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm New Password</Label>
-                  <Input id="confirm-password" type="password" />
+                <Label htmlFor="confirm-password">Confirm New Password</Label>
+                <Input 
+                  id="confirm-password" 
+                  name="confirm-password"
+                  type="password" 
+                  required
+                />
                 </div>
               </div>
-
-              {/* <Separator className="my-4" />
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Two-Factor Authentication</h3>
-                <p className="text-sm text-muted-foreground">
-                  Add an extra layer of security to your account by enabling two-factor authentication.
-                </p>
-                <div className="flex items-center gap-4">
-                  <Button variant="outline" className="gap-2">
-                    <Lock className="h-4 w-4" />
-                    Enable 2FA
-                  </Button>
-                  <Badge variant="outline" className="text-muted-foreground">
-                    Not Enabled
-                  </Badge>
-                </div>
-              </div> */}
-
-              {/* <Separator className="my-4" /> */}
-
-              {/* <div className="space-y-4">
-                <h3 className="text-lg font-medium">Login Sessions</h3>
-                <p className="text-sm text-muted-foreground">
-                  Manage your active sessions and sign out from other devices.
-                </p>
-                <div className="space-y-4">
-                  <div className="rounded-md border p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <p className="font-medium">Current Session</p>
-                        <p className="text-sm text-muted-foreground">Windows 11 • Chrome • New York, USA</p>
-                        <p className="text-xs text-muted-foreground">Started May 18, 2025 at 1:30 PM</p>
-                      </div>
-                      <Badge>Active Now</Badge>
-                    </div>
-                  </div>
-                  <div className="rounded-md border p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <p className="font-medium">Mobile App</p>
-                        <p className="text-sm text-muted-foreground">iOS 17 • CRM App • San Francisco, USA</p>
-                        <p className="text-xs text-muted-foreground">Started May 17, 2025 at 9:45 AM</p>
-                      </div>
-                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                        Sign Out
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div> */}
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => {
+                    router.refresh()
+                }}>Cancel</Button>
+                <Button type="submit">Update Password</Button>
+              </div>
+              </form>
             </CardContent>
-            <CardFooter className="flex justify-end gap-2">
-              <Button variant="outline">Cancel</Button>
-              <Button>Update Password</Button>
-            </CardFooter>
           </Card>
         </TabsContent>
 
@@ -681,7 +729,7 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                       Choose how dates are displayed throughout the application.
                     </p>
                   </div>
-                  <Select defaultValue={preferences?.date_format}>
+                  <Select defaultValue={preferences?.date_format} onValueChange={(e)=>dispatch({ type: "UPDATE", payload: { date_format: e } })}>
                     <SelectTrigger className="w-40">
                       <SelectValue placeholder="Date Format" />
                     </SelectTrigger>
@@ -702,7 +750,7 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                       Choose how time is displayed throughout the application.
                     </p>
                   </div>
-                    <Select defaultValue={preferences?.time_format || "24h"}>
+                    <Select defaultValue={preferences?.time_format} onValueChange={(e)=>dispatch({ type: "UPDATE", payload: { time_format: e } })}>
                     <SelectTrigger className="w-40">
                       <SelectValue placeholder="Time Format" />
                     </SelectTrigger>
@@ -722,11 +770,12 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                       Set the default currency for deals and transactions.
                     </p>
                   </div>
-                    <Select defaultValue={preferences?.currency?.toLowerCase() || "usd"}>
+                    <Select defaultValue={preferences?.currency?.toLowerCase()} onValueChange={(e)=>dispatch({ type: "UPDATE", payload: { currency: e } })}>
                     <SelectTrigger className="w-40">
                       <SelectValue placeholder="Currency" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="inr">INR (₹)</SelectItem>
                       <SelectItem value="usd">USD ($)</SelectItem>
                       <SelectItem value="eur">EUR (€)</SelectItem>
                       <SelectItem value="gbp">GBP (£)</SelectItem>
@@ -744,7 +793,7 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                     <Label>Theme</Label>
                     <p className="text-sm text-muted-foreground">Choose the application theme.</p>
                   </div>
-                  <Select defaultValue={preferences?.theme || "light"}>
+                    <Select defaultValue={preferences?.theme} onValueChange={(e)=>dispatch({ type: "UPDATE", payload: { theme: e } })} >
                     <SelectTrigger className="w-40">
                       <SelectValue placeholder="Theme" />
                     </SelectTrigger>
@@ -753,21 +802,10 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                       <SelectItem value="dark">Dark</SelectItem>
                       <SelectItem value="system">System</SelectItem>
                     </SelectContent>
-                  </Select>
+                    </Select>
                 </div>
 
-                <Separator />
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="auto-refresh">Auto Refresh</Label>
-                    <p className="text-sm text-muted-foreground">Automatically refresh data every 5 minutes.</p>
-                  </div>
-                  <Switch id="auto-refresh" defaultChecked={preferences?.notify_browser ?? true} />
-                </div>
-
-                <Separator />
-
+                
                 {/* <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="analytics">Usage Analytics</Label>
@@ -798,8 +836,8 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
               </div>
             </CardContent>
             <CardFooter className="flex justify-end gap-2">
-              <Button variant="outline">Reset to Default</Button>
-              <Button>Save Changes</Button>
+              <Button variant="outline" onClick={()=>router.refresh()}>Reset to Default</Button>
+              <Button onClick={savepreferences}>Save Changes</Button>
             </CardFooter>
           </Card>
         </TabsContent>
