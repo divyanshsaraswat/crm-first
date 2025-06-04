@@ -125,7 +125,6 @@ const formUsersEditSchema = z.object({
 });
 
 const formAccountsSchema = z.object({
-  id:z.string(),
   name: z.string().min(1, "Customer name is required"),
   industry: z.string().optional(),
   website: z.string().optional(),

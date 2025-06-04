@@ -19,7 +19,7 @@ interface UserData {
   username: string;
 }
 
-export default function Sidebar() {
+function SidebarIn() {
       const [expanded, setExpanded] = useState(false)
       const [locked,setlocked]  = useState(false)
       const [isMobile, setIsMobile] = useState(false)
@@ -179,7 +179,72 @@ export default function Sidebar() {
         </>
     )
 }
+function MobileTabNavigator() {
+  const [active, setActive] = useState<number>(0)
+  const router = useRouter()
 
+  const navItems = [
+    { name: "Contacts", icon: UserCircle2, route: "/accounts", num: 0 },
+    { name: "Tasks", icon: Pen, route: "/tasks", num: 1 },
+    { name: "Reports", icon: NotebookPenIcon, route: "/reports", num: 2 },
+    { name: "Settings", icon: Settings, route: "/settings", num: 3 },
+    { name: "Users", icon: User2Icon, route: "/users", num: 4 },
+  ]
+
+  useEffect(() => {
+    const pathname = window.location.pathname
+    const match = navItems.find((item) => pathname.startsWith(item.route))
+    if (match) {
+      setActive(match.num)
+    }
+  }, [])
+
+  const handleNavigation = (item: (typeof navItems)[0]) => {
+    setActive(item.num)
+    router.push(item.route)
+  }
+
+  return (
+    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-pb">
+      <div className="flex items-center justify-around py-2 px-2">
+        {navItems.map((item) => {
+          const IconComponent = item.icon
+          return (
+            <motion.button
+              key={item.name}
+              onClick={() => handleNavigation(item)}
+              className={cn(
+                "flex flex-col items-center justify-center p-2 rounded-lg min-w-0 flex-1 transition-colors",
+                active === item.num ? "text-emerald-700" : "text-gray-500 hover:text-emerald-600",
+              )}
+              whileTap={{ scale: 0.95 }}
+            >
+              <IconComponent
+                className={cn("h-5 w-5 mb-1", active === item.num ? "text-emerald-700" : "text-gray-500")}
+              />
+              <span
+                className={cn(
+                  "text-xs font-medium truncate",
+                  active === item.num ? "text-emerald-700" : "text-gray-500",
+                )}
+              >
+                {item.name}
+              </span>
+            </motion.button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+export default function Sidebar() {
+  return (
+    <>
+      <SidebarIn />
+      <MobileTabNavigator />
+    </>
+  )
+}
 export function Header(){
       const [expanded, setExpanded] = useState(true)
       const [isMobile, setIsMobile] = useState(false)
