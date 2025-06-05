@@ -6,7 +6,7 @@ import { Pill, UserCheck2, LucideContact2, Pen, Tag, Settings,ChevronDown,Chevro
 import { DropdownMenu,DropdownMenuTrigger,DropdownMenuContent,DropdownMenuItem } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
-import { useState,useEffect } from "react";
+import { useState,useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 interface UserData {
   created_at: string;    
@@ -245,6 +245,95 @@ export default function Sidebar() {
     </>
   )
 }
+export function Notifications(){
+  const [notify, setNotify] = useState<any>(null);
+  const [token,settoken] = useState<string>();
+  const [isreads,setisreads]= useState<boolean>();
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
+      const result = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/notifications`,
+        {
+          credentials:"include",
+          headers:{
+            "Cookie":token
+          }
+        }
+      );
+      if (result.ok) {
+        const data = await result.json();
+        setNotify(data);
+        const hasUnreadNotifications = data?.notifications?.some((notification:any) => !notification.is_read);
+        console.log(hasUnreadNotifications)
+        setisreads(hasUnreadNotifications);
+        console.log(data);
+      }
+    };
+    fetchData();
+  }, []);
+  return(
+     <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="relative flex flex-row bg-transparent h-12 w-12 rounded-xl cursor-pointer">
+                  <Bell className="h-12 w-12"/>
+                    {isreads && (
+                      <div className="absolute right-4 top-3">
+                        <div className="w-2 h-2 bg-red-700 rounded-full animate-ping"></div>
+                        <div className="w-2 h-2 bg-red-700 rounded-full absolute inset-0"></div>
+                      </div>
+                    )}
+                </Button> 
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 md:w-96 max-h-80 backdrop-blur-md bg-white/20 border border-white/30 rounded-xl shadow-md overflow-y-scroll">
+                
+                {notify?.notifications?.map((res:any,idx:any)=>{
+                  return  (
+                    <DropdownMenuItem 
+                    key={idx} 
+                    className="cursor-pointer"
+                    onMouseEnter={async () => {
+                      if (!res.is_read) {
+                      try {
+                        
+
+                        const headers: HeadersInit = {
+                          'Content-Type': 'application/json'
+                        };
+                        if (token) {
+                          headers.Cookie = token;
+                        }
+                        await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/notifications/${res.id}/read`, {
+                          method: 'PATCH',
+                          credentials: 'include',
+                          headers
+                        });
+                        // Update the local state to mark as read
+                        res.is_read = true;
+                      } catch (error) {
+                        console.error('Error marking notification as read:', error);
+                      }
+                      }
+                    }}
+                    >
+                    <div className="flex flex-row items-center justify-start gap-10 w-full p-2 rounded-md">
+                      <div className="relative">
+                      <Bell className="h-5 w-5 scale-150 text-gray-800 dark:text-white" />
+                      <div className={`${!res.is_read ? 'flex' : 'hidden'} absolute left-2 bottom-3 w-2 h-2 bg-red-700 rounded-full`}></div>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                      <p className="text-sm font-semibold truncate">{res.title}</p>
+                      <p className="text-xs font-semibold truncate">{res.message}</p>
+                      </div>
+                    </div>
+                    </DropdownMenuItem>
+                )})
+                 }
+             
+              
+              </DropdownMenuContent>
+            </DropdownMenu>
+  )
+}
 export function Header(){
       const [expanded, setExpanded] = useState(true)
       const [isMobile, setIsMobile] = useState(false)
@@ -314,32 +403,9 @@ export function Header(){
           </h1>
 
           <div className="flex items-center gap-4 ">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="relative flex flex-row bg-transparent h-12 w-12 rounded-xl cursor-pointer">
-                  <Bell className="h-12 w-12"/>
-                    <div className="absolute right-4 top-3 w-2 h-2 bg-red-700 rounded-full animate-ping"></div>
-                    <div className="absolute right-4 top-3 w-2 h-2 bg-red-700 rounded-full"></div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 md:w-100 backdrop-blur-md bg-white/20 border border-white/30 rounded-xl shadow-md">
-                <DropdownMenuItem className="cursor-pointer">
-                    <div className="flex flex-row items-center justify-start gap-10 w-full  p-2 rounded-md">
-                    <Bell className="h-5 w-5 scale-150 text-gray-800 dark:text-white" />
-                        <p className="text-sm font-semibold truncate">Notifications dfgnfdkjgndfgndfgk  kergjerkgj fgkjdfngkdfngkdfgkfdngdfngkjdfnjgndfkjgndfjgnkjdfgnkjdfngkjgndfkjngkjngkjdfngkjdfgkldfngkldfngk</p>
-                    </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
-                    <div className="flex flex-row items-center justify-start gap-10 w-full p-2 rounded-md">
-                    <PencilIcon className="h-5 w-5 scale-150 text-gray-800 dark:text-white" />
-                        <p className="text-sm font-semibold truncate">Notifications dfgnfdkjgndfgndfgk  kergjerkgj fgkjdfngkdfngkdfgkfdngdfngkjdfnjgndfkjgndfjgnkjdfgnkjdfngkjgndfkjngkjngkjdfngkjdfgkldfngkldfngk</p>
-                    </div>
-                </DropdownMenuItem>
-              
-              </DropdownMenuContent>
-            </DropdownMenu>
+           
 
-
+              <Notifications/>
 
 
 
