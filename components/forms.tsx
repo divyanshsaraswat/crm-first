@@ -1484,16 +1484,15 @@ export function CrmUsersModal() {
       const data = await res.json(); // Parse JSON body
       const token = data?.token;
 
-      const result = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/insert`,{
-        method:"POST",
-        credentials:'include',
-        headers:{
-          "Content-Type": "application/json",
-          Cookie: token
-        },
-        body: JSON.stringify(values)
-      })
-      
+     const result = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/insert`, {
+      method: "POST",
+      credentials: "include",   // This ensures cookies are sent with the request
+      headers: {
+        "Content-Type": "application/json"  // Important for JSON body parsing
+      },
+      body: JSON.stringify(values)
+    });
+          
       if (!result.ok) {
         throw new Error('Failed to insert user.')
       }

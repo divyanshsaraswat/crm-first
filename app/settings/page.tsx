@@ -210,7 +210,6 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
             }
           }).then(async(res)=>{
             const result = await res.json()
-            console.log(result[0][0])
             setdata(result[0][0])
             setloading(false);
         }).catch((e)=>{console.error(e)})

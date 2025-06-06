@@ -50,30 +50,33 @@ function SidebarIn() {
           },
         });
         const result = await res.json();
-        console.log(result);
-        const {
-      currency,
-      date_format,
-      notify_browser,
-      notify_email,
-      notify_lead_alerts,
-      notify_task_reminders,
-      theme,
-      time_format,
-    } = result[0][0];
 
-    const preferences = {
-      currency,
-      date_format,
-      notify_browser,
-      notify_email,
-      notify_lead_alerts,
-      notify_task_reminders,
-      theme,
-      time_format,
-    };
+        if (result[0]?.length>0){
 
-    localStorage.setItem("preferences", JSON.stringify(preferences));
+          const {
+        currency,
+        date_format,
+        notify_browser,
+        notify_email,
+        notify_lead_alerts,
+        notify_task_reminders,
+        theme,
+        time_format,
+      } = result[0][0];
+      const preferences = {
+        currency,
+        date_format,
+        notify_browser,
+        notify_email,
+        notify_lead_alerts,
+        notify_task_reminders,
+        theme,
+        time_format,
+      };
+      localStorage.setItem("preferences", JSON.stringify(preferences));
+        }
+
+
       } catch (e) {
         console.error('Error fetching preferences:', e);
         return null;
