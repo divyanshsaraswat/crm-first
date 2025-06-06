@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
-import { Eye, EyeClosed, UserPlus,Plus } from "lucide-react"
+import { Eye, EyeClosed, UserPlus,Plus, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Flag from 'react-world-flags'
 import { Button } from "@/components/ui/button"
@@ -172,7 +172,7 @@ export function CrmContactModal() {
     if (!response.ok) {
       throw new Error("Failed to create user")
     }
-        window.location.reload();    
+        // window.location.reload();    
 
     }
 
@@ -595,7 +595,7 @@ export function CrmUsersEditModal({data}:any) {
     if (!response.ok) {
       throw new Error("Failed to create user")
     }
-    window.location.reload();
+    // window.location.reload();
     return response.json()
 
   }
@@ -803,7 +803,7 @@ export function CrmAccountsEditModal({data}:any) {
     }
     fetchData();
     form.reset()
-    window.location.reload();
+    // window.location.reload();
   }
   useEffect(()=>{
     
@@ -1452,6 +1452,7 @@ export function CrmUsersModal() {
   const [open, setOpen] = useState(false)
   const [show,setShow] = useState(true)
   const [showroles,setshowroles] = useState([])
+  const [loading,setloading] = useState<boolean>(false);
   const submitData = async (data: any) => {
     const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/insert`, {
@@ -1478,17 +1479,21 @@ export function CrmUsersModal() {
 
   function onSubmit(values: z.infer<typeof formUsersSchema>) {
     console.log(values)
-    setOpen(false)
+    setloading(true)
+    setTimeout(()=>{
+      setOpen(false)
+
+    },500)
        const fetchData = async()=>{
      const res = await fetch('/api/session');
       const data = await res.json(); // Parse JSON body
       const token = data?.token;
-
+      
      const result = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/insert`, {
       method: "POST",
       credentials: "include",   // This ensures cookies are sent with the request
       headers: {
-        "Content-Type": "application/json"  // Important for JSON body parsing
+        "content-type": "application/json"  // Important for JSON body parsing
       },
       body: JSON.stringify(values)
     });
@@ -1503,8 +1508,10 @@ export function CrmUsersModal() {
 
     }
     fetchData();
+    setTimeout(()=>{
+      window.location.reload();
+    },1500)
     form.reset()
-    window.location.reload();
   }
   useEffect(()=>{
     
@@ -1645,7 +1652,7 @@ export function CrmUsersModal() {
       <Button variant="outline" type="button" onClick={() => setOpen(false)}>
         Cancel
       </Button>
-      <Button type="submit">Save User</Button>
+      <Button type="submit">{loading?<Loader2 className="w-4 h-4 animate-spin"/>:'Save User'}</Button>
     </DialogFooter>
   </form>
 </Form>
@@ -1720,7 +1727,7 @@ export function CrmAccountsModal() {
     fetchData();
     // console.log(values);
     form.reset()
-    window.location.reload();
+    // window.location.reload();
   }
   useEffect(()=>{
     
