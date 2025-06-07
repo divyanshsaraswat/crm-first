@@ -261,7 +261,7 @@ export function DataTable<TData, TValue>({
                                 </Button>
                                
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 w-full md:w-fit justify-between">
                                 
                              
                                 <Dialog>

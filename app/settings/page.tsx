@@ -226,8 +226,8 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
         <p className="text-muted-foreground">Manage your account settings and preferences.</p>
       </div>
     
-      <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 h-auto">
+      <Tabs defaultValue="profile" className="space-y-2 pb-8">
+        <TabsList className="grid grid-cols-5 md:grid-cols-4 lg:grid-cols-6 gap-2 h-auto">
           <TabsTrigger value="profile" className="flex items-center gap-2 py-2">
             <User className="h-4 w-4" />
             <span className="hidden md:inline">Profile</span>
@@ -255,7 +255,7 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
         </TabsList>
 
         {/* Profile Tab */}
-        <TabsContent value="profile" className="space-y-6">
+        <TabsContent value="profile" className="space-y-6 ">
 
           {!loading && <Card>
             <CardHeader>
