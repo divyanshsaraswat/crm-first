@@ -127,7 +127,6 @@ const formUsersEditSchema = z.object({
 const formAccountsSchema = z.object({
   id:z.string().optional(),
   name: z.string().min(1, "Customer name is required"),
-  industry: z.string().optional(),
   website: z.string().optional(),
   updated_at: z.string().optional(),
   Zone: z.string().optional(),
@@ -749,7 +748,6 @@ export function CrmAccountsEditModal({data}:any) {
     defaultValues: {
       id:data[0]?.original.id,
       name: data[0]?.original.name,
-      industry: data[0]?.original.industry,
       website: data[0]?.original.website,
       updated_at: data[0]?.original.updated_at,
       Zone: data[0]?.original.Zone,
@@ -759,7 +757,7 @@ export function CrmAccountsEditModal({data}:any) {
       Address2: data[0]?.original.Address2,
       City: data[0]?.original.City,
       Zip: data[0]?.original.Zip,
-      State: data[0]?.original.State,
+      State: data[0]?.original.States,
       Country: data[0]?.original.Country,
       phone: data[0]?.original.phone,
       waphone: data[0]?.original.waphone,
@@ -861,10 +859,7 @@ export function CrmAccountsEditModal({data}:any) {
           <FormItem><FormLabel>Company Name</FormLabel>
           <FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
         )} />
-        <FormField name="industry" control={form.control} render={({ field }) => (
-          <FormItem><FormLabel>Industry</FormLabel>
-          <FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
+        
 
         <FormField name="email" control={form.control} render={({ field }) => (
           <FormItem><FormLabel>Email</FormLabel>
