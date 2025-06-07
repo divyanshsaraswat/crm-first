@@ -22,7 +22,7 @@ export type Account = {
   Address2?: string;
   City?: string;
   Zip?: string;
-  State?: string;
+  States?: string;
   Country?: string;
   phone?: string;
   waphone?: string;
@@ -41,7 +41,7 @@ export const columns: ColumnDef<Account>[] = [
   "source_type",
   "Rating",
   "ContPerson",
-  "State",
+  "States",
   "phone",
   "email",
   "designation_name",
