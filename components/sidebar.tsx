@@ -289,7 +289,7 @@ export function Notifications(){
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 md:w-96 max-h-80 backdrop-blur-md bg-white/20 border border-white/30 rounded-xl shadow-md overflow-y-scroll">
                 
-                {notify?.notifications?.map((res:any,idx:any)=>{
+                {notify?notify.notifications?.map((res:any,idx:any)=>{
                   return  (
                     <DropdownMenuItem 
                     key={idx} 
@@ -329,7 +329,15 @@ export function Notifications(){
                       </div>
                     </div>
                     </DropdownMenuItem>
-                )})
+                )}):(
+                  <DropdownMenuItem className="cursor-default">
+                    <div className="flex flex-col items-center justify-center w-full py-4 px-2">
+                      <Bell className="h-8 w-8 text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-500 text-center">No notifications yet</p>
+                      <p className="text-xs text-gray-400 text-center mt-1">We'll notify you when something arrives</p>
+                    </div>
+                  </DropdownMenuItem>
+                )
                  }
              
               
