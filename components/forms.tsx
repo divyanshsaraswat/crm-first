@@ -1668,7 +1668,7 @@ export function CrmAccountsModal() {
    defaultValues: {
 
   name: '',
-  industry: '',
+
   website: '',
   updated_at: '',
   Zone: '',
@@ -1777,10 +1777,7 @@ export function CrmAccountsModal() {
           <FormItem><FormLabel>Company Name</FormLabel>
           <FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
         )} />
-        <FormField name="industry" control={form.control} render={({ field }) => (
-          <FormItem><FormLabel>Industry</FormLabel>
-          <FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
+       
 
         <FormField name="email" control={form.control} render={({ field }) => (
           <FormItem><FormLabel>Email</FormLabel>
