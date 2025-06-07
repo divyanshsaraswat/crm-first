@@ -25,7 +25,7 @@ export default function LoginPage() {
     })
 
     if (result.ok) {
-      window.location.href = "/contacts"
+      window.location.href = "/accounts"
     } else {
       setLogin(false);
       setfailed(true);

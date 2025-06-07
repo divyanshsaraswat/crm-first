@@ -77,7 +77,7 @@ export default  function Contacts() {
             setloading(true)
         }).catch((e)=>{console.error(e)})
         }
-        fetchData()
+        // fetchData()
         
       },[]);
       const form = useForm<z.infer<typeof FormSchema>>({

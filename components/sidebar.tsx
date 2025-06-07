@@ -372,6 +372,7 @@ export function Header(){
             }
             const output = await result.json();
             setdata(output)
+            
           } catch (error) {
             console.error("Error fetching user verification:", error);
           }
