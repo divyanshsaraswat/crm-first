@@ -580,6 +580,8 @@ export function CrmContactEditModal({data}:any) {
 export function CrmUsersEditModal({data}:any) {
   const [open, setOpen] = useState(false)
   const [roles,setroles] = useState([])
+  const [loading,setloading] = useState<boolean>(false);
+
   const submitData = async (data: any) => {
     const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e));
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users`, {
@@ -592,9 +594,12 @@ export function CrmUsersEditModal({data}:any) {
       body: JSON.stringify(data),
     })
     if (!response.ok) {
-      throw new Error("Failed to create user")
+    
+      throw new Error('Error Occured') 
     }
-    // window.location.reload();
+    setTimeout(()=>{
+      window.location.reload();
+    },1500)
     return response.json()
 
   }
@@ -609,7 +614,11 @@ export function CrmUsersEditModal({data}:any) {
 
   function onSubmit(values: z.infer<typeof formUsersEditSchema>) {
     console.log(values)
-    setOpen(false)
+    setloading(true)
+    setTimeout(()=>{
+      setOpen(false)
+
+    },500)
     const ndata = {...values,"id":data[0]?.original?.id};
     submitData(ndata)
     form.reset()
@@ -742,6 +751,7 @@ export function CrmAccountsEditModal({data}:any) {
   const [open, setOpen] = useState(false)
   const [show,setShow] = useState(true)
   const [showroles,setshowroles] = useState([])
+  const [loading,setloading] = useState<boolean>(false);
 
   const form = useForm<z.infer<typeof formAccountsSchema>>({
     resolver: zodResolver(formAccountsSchema),
@@ -773,7 +783,11 @@ export function CrmAccountsEditModal({data}:any) {
 
   function onSubmit(values: z.infer<typeof formAccountsSchema>) {
     console.log(values)
-    setOpen(false)
+     setloading(true)
+    setTimeout(()=>{
+      setOpen(false)
+
+    },500)
        const fetchData = async()=>{
      const res = await fetch('/api/session');
       const data = await res.json(); // Parse JSON body
@@ -801,7 +815,9 @@ export function CrmAccountsEditModal({data}:any) {
     }
     fetchData();
     form.reset()
-    // window.location.reload();
+    setTimeout(()=>{
+      window.location.reload();
+    },1500)
   }
   useEffect(()=>{
     
@@ -829,7 +845,7 @@ export function CrmAccountsEditModal({data}:any) {
 
     }
     fetchData();
-    console.log(data[0]?.original?.id);
+   
   },[])
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -1039,6 +1055,7 @@ export function CrmTaskModal({ data }: any) {
   const [show, setShow] = useState(true);
   const [showroles, setshowroles] = useState([]);
   const [showcompany,setshowcompany] = useState([]);
+  const [loading,setloading] = useState<boolean>(false);
 
   const form = useForm({
     resolver: zodResolver(formTaskSchema),
@@ -1054,7 +1071,11 @@ export function CrmTaskModal({ data }: any) {
 
   function onSubmit(values: any) {
     console.log(values);
-    setOpen(false);
+     setloading(true)
+    setTimeout(()=>{
+      setOpen(false)
+
+    },500)
 
     const fetchData = async () => {
       const res = await fetch('/api/session');
@@ -1230,6 +1251,7 @@ export function CrmTaskEditModal({ data,updateparent }: any) {
   const [showroles, setshowroles] = useState([]);
   const [refresh,setrefresh] = useState(false);
   const [showcompany,setshowcompany] = useState([]);
+  const [loading,setloading] = useState<boolean>(false);
 
   const form = useForm({
     resolver: zodResolver(formTaskEditSchema),
@@ -1237,7 +1259,7 @@ export function CrmTaskEditModal({ data,updateparent }: any) {
       id:data[0]?.original.id,
       subject: data[0]?.original.subject,
       body: data[0]?.original.body,  
-      status: data[0]?.original.status,
+      status: data[0]?.original.status_id,
       due_date: data[0]?.original.due_date,
       assigned_user_id : data[0]?.original.assigned_user_id
     }
@@ -1245,7 +1267,11 @@ export function CrmTaskEditModal({ data,updateparent }: any) {
 
   function onSubmit(values: any) {
     console.log(values);
-    setOpen(false);
+     setloading(true)
+    setTimeout(()=>{
+      setOpen(false)
+
+    },500)
 
     const fetchData = async () => {
       const res = await fetch('/api/session');
@@ -1276,9 +1302,12 @@ export function CrmTaskEditModal({ data,updateparent }: any) {
     };
 
     fetchData();
+    setTimeout(()=>{
+      window.location.reload();
+    },300)
     form.reset();
-    updateparent();
   }
+   
 
   useEffect(() => {
     const fetchData = async () => {
@@ -1662,6 +1691,7 @@ export function CrmAccountsModal() {
   const [open, setOpen] = useState(false)
   const [show,setShow] = useState(true)
   const [showroles,setshowroles] = useState([])
+  const [loading,setloading] = useState<boolean>(false);
 
   const form = useForm<z.infer<typeof formAccountsSchema>>({
     resolver: zodResolver(formAccountsSchema),
@@ -1694,7 +1724,11 @@ export function CrmAccountsModal() {
 
   function onSubmit(values: z.infer<typeof formAccountsSchema>) {
     console.log(values)
-    setOpen(false)
+     setloading(true)
+    setTimeout(()=>{
+      setOpen(false)
+
+    },500)
        const fetchData = async()=>{
      const res = await fetch('/api/session');
       const data = await res.json(); // Parse JSON body
@@ -1722,7 +1756,9 @@ export function CrmAccountsModal() {
     fetchData();
     // console.log(values);
     form.reset()
-    // window.location.reload();
+    setTimeout(()=>{
+      window.location.reload();
+    },1500)
   }
   useEffect(()=>{
     

@@ -138,7 +138,7 @@ export function DataTable<TData, TValue>({
         }
       }
       fetchData();
-      window.location.reload();
+      // window.location.reload();
 
   }
   const exportdata = (data:string[])=>{

@@ -75,8 +75,10 @@ export function DataTable<TData, TValue>({
   subject: true,
   body: true,
   status: true,
+  status_id:false,
   due_date: true,
-  assigned_user_id: true,
+  assigned_user:true,
+  assigned_user_id: false,
   created_by:true,
   contact_id: false,
   created_at: false,
@@ -115,6 +117,29 @@ const statusbadges = (line: string) => {
       </Badge>
     )
    
+  }
+  const changeStatus = async(id:string)=>{
+        const fetchData = async () => {
+        const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/tasks/${id}`, {
+          method: 'PUT',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json', 
+            'Cookie': token
+          },
+        });
+        if (response.ok) {
+          console.log('Status Changed Successfully.');
+        } else {
+          console.error('Error changing status');
+        }
+      }
+      fetchData();
+      setTimeout(()=>{
+      window.location.reload();
+    },1500)
+
   }
   const table = useReactTable({
     data,
@@ -354,19 +379,9 @@ const statusbadges = (line: string) => {
 
                             </DialogContent>
                           </Dialog>                            
-                            <Dialog>
-                            <DialogTrigger>    
-                                <button className="cursor-pointer hover:underline text-emerald-600 flex flex-row gap-1 w-fit whitespace-nowrap" onClick={()=>exportdata(select)}><Check/>Complete Task</button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Exporting Data</DialogTitle>
-
-                              </DialogHeader>
-                                <div className="italic text-center">Downloading...</div>
-
-                            </DialogContent>
-                          </Dialog>                            
+                           
+                                <button className={`cursor-pointer hover:underline text-emerald-600 flex flex-row gap-1 w-fit whitespace-nowrap`} onClick={()=>changeStatus(select[0])}><Check/>Complete Task</button>
+                                                  
                           </div>
                          
                             

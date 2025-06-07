@@ -7,10 +7,11 @@ async function getTasksHandler(request:NextRequest) {
   return await tasksController.getTasks(request);
 }
 
+
 // PUT /api/users
-async function deleteTaskHandler(request:NextRequest) {
-  return await tasksController.deleteTask(request);
+async function updateTaskHandler(request:NextRequest) {
+  return await tasksController.updateById(request);
 }
 
 export const GET = userAuth(getTasksHandler);
-export const DELETE = fuseAuth(deleteTaskHandler);
+export const PUT = fuseAuth(updateTaskHandler);

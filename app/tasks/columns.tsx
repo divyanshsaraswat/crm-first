@@ -9,8 +9,10 @@ export type Task = {
   id: string; // uniqueidentifier
   subject?: string; // varchar(255)
   body?: string; // nvarchar(MAX)
+  status_id?:string;
   status?: string; // varchar(50)
   due_date?: string; // date
+  assigned_user?:string;
   contact_id?: string; // uniqueidentifier
   created_at?: string; // datetime2(7)
   assigned_user_id?: string; // uniqueidentifier
@@ -24,8 +26,10 @@ export const columns: ColumnDef<Task>[] = [
   "subject",
   "body",
   "due_date",
-  "assigned_user_id",
+  "assigned_user",
   "created_by",
+  "assigned_user_id",
+  "status_id",
   "contact_id",
   "created_at",
   "updated_at"
