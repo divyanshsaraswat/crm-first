@@ -187,7 +187,9 @@ const statusbadges = (line: string) => {
         }
       }
       fetchData();
+      setTimeout(()=>{
       window.location.reload();
+    },1500)
 
   }
   const exportdata = (data:string[])=>{
