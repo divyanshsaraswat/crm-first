@@ -53,11 +53,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { useEffect, useState } from "react"
+import { useEffect, useState,Suspense } from "react"
 import { Button } from "@/components/ui/button" // For pagination buttons
 import { BoxSelect, ChevronDown, ChevronLeft, ChevronRight, Columns3,FilterIcon,Plus,PlusCircleIcon,X } from "lucide-react" // Optional icons
 import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
+import NestedTable from "@/components/nested"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -78,7 +79,7 @@ export function DataTable<TData, TValue>({
   source_type:true,
   Rating:true,
   ContPerson:true,
-  State:true,
+  States:true,
   phone:true,
   email:true,
   designation_name:true,
@@ -92,6 +93,7 @@ export function DataTable<TData, TValue>({
   City:false,
   Zip:false,
   Country:false,
+  created_by_id:true,
   waphone:false,
   BusinessNature:false,
   JoiningDate:false,
@@ -99,6 +101,57 @@ export function DataTable<TData, TValue>({
   DesignationID:false,
   StatusID:false,
 })
+  const defaultVisibility: VisibilityState = {
+  id: true,
+  name: true,
+  status_type: true,
+  source_type: true,
+  Rating: true,
+  ContPerson: true,
+  States: true,
+  phone: true,
+  email: true,
+  designation_name: true,
+  industry: false,
+  website: false,
+  assigned_user_id: false,
+  updated_at: false,
+  Zone: false,
+  Address1: false,
+  Address2: false,
+  City: false,
+  Zip: false,
+  created_by_id:true,
+  Country: false,
+  waphone: false,
+  BusinessNature: false,
+  JoiningDate: false,
+  SourceID: false,
+  DesignationID: false,
+  StatusID: false,
+};
+const getColumnVisibilityFromLocalStorage = (): VisibilityState => {
+  try {
+    const data = localStorage.getItem('accounts');
+    if (!data) return defaultVisibility;
+
+    const visibleKeys: string[] = JSON.parse(data); // directly a string array
+    if (!Array.isArray(visibleKeys)) return defaultVisibility;
+
+    const normalizedVisibleKeys = visibleKeys.map(k => k.trim().toLowerCase());
+
+    const updatedVisibility: VisibilityState = {};
+    for (const key in defaultVisibility) {
+      updatedVisibility[key] = normalizedVisibleKeys.includes(key.toLowerCase());
+    }
+
+    console.log(updatedVisibility);
+    return updatedVisibility;
+  } catch (error) {
+    console.error('Failed to parse accounts from localStorage', error);
+    return defaultVisibility;
+  }
+};
   const [searchTerm, setSearchTerm] = useState<ColumnFiltersState>([])
   const [opendialog,setopendialog] = useState<boolean>(false);
   const [addfield, setaddfield] = useState<number>(0)
@@ -217,6 +270,8 @@ export function DataTable<TData, TValue>({
     const [isOpen, setIsOpen] = useState(false)
     const [data,setdata] = useState('no')
     const [activehover,setactivehover] = useState(true)
+     const visibleCells = row.getVisibleCells();
+    const colSpan = visibleCells.length;
     let depthin = depth||0;
   return (
     <>
@@ -229,8 +284,8 @@ export function DataTable<TData, TValue>({
 
       >
         {row.getVisibleCells().map((cell:any, idx:number) => (
-          <TableCell key={cell.id}>
-              <div className={`flex items-center gap-1`} style={{ marginLeft: child && idx === 0 ? `${depthin * 12}px` : 0 }}>
+          <TableCell key={cell.id} className="justify-center items-center">
+              <div className={`flex items-center justify-center gap-1`} style={{ marginLeft: child && idx === 0 ? `${depthin * 12}px` : 0 }}>
                 {idx==0 && <Checkbox
                   className="w-4 h-4 mr-2 cursor-pointer"
                   checked={select.includes(cell.getValue() as string)}
@@ -248,10 +303,25 @@ export function DataTable<TData, TValue>({
           </TableCell>
         ))}
       </TableRow>
-      {isOpen && <CustomTableRow  row={row} child={true} depth={depthin+1} />}
+    {/* {isOpen && <CustomTableRow  row={row} child={true} depth={depthin+1} />} */}
+   {isOpen && (
+ 
+     <TableRow className="bg-gray-100 w-full">
+        <TableCell colSpan={colSpan} className="border-2 p-5 pl-8">
+
+    <NestedTable did={row.original.id}/>
+        </TableCell>
+        </TableRow>
+
+)}
     </>
   );
 }
+useEffect(() => {
+    const visibility = getColumnVisibilityFromLocalStorage();
+    console.log('Vibl',visibility);
+    setColumnVisibility(visibility);
+  }, []);
   return (
     <div className="rounded-md ">
       <div className="flex flex-col sm:flex-row  justify-between items-start sm:items-center gap-4 mb-4">
@@ -283,7 +353,20 @@ export function DataTable<TData, TValue>({
                             <div className="flex gap-2 w-full md:w-fit justify-between">
                                 
                              
-                                <Dialog open={opendialog} onOpenChange={setopendialog}>
+                                <Dialog open={opendialog} onOpenChange={()=>{
+                                 
+                                          const visibleColumns = table
+                                            .getAllColumns()
+                                            .filter((column) => column.getCanHide() && column.getIsVisible())
+                                            .map((column) => column.id);
+
+                                         
+                                          localStorage.setItem('accounts', JSON.stringify(visibleColumns));
+
+                                        
+                                          setopendialog(!opendialog);
+                                     
+                                }}>
                                     <DialogTrigger asChild>
                                         <Button variant="outline">
                                             Columns
@@ -324,9 +407,18 @@ export function DataTable<TData, TValue>({
                                          <Button variant="outline" onClick={()=>{
                                             addfield==0?setaddfield(1):setaddfield(0)
                                           }} className={`${addfield==1?'hidden':'flex'}`}>Add Field</Button>
-                                          <Button onClick={()=>{
-                                            setopendialog(false)
-                                          }} className={`${addfield==1?'hidden':'flex'}`}>Close</Button>
+                                          <Button onClick={() => {
+                                          const visibleColumns = table
+                                            .getAllColumns()
+                                            .filter((column) => column.getCanHide() && column.getIsVisible())
+                                            .map((column) => column.id);
+
+                                         
+                                          localStorage.setItem('accounts', JSON.stringify(visibleColumns));
+
+                                        
+                                          setopendialog(false);
+                                        }} className={`${addfield==1?'hidden':'flex'}`}>Close</Button>
                                           
                                     </DialogContent>
                                 </Dialog>

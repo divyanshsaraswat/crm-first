@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
+import { FloatingLabelInput } from '@/components/ui/floating-input';
 import { Slot } from "@radix-ui/react-slot"
 import {
   Controller,
@@ -80,7 +81,7 @@ function FormItem({ className, ...props }: React.ComponentProps<"div">) {
     <FormItemContext.Provider value={{ id }}>
       <div
         data-slot="form-item"
-        className={cn("grid gap-2", className)}
+        className={cn("grid gap-2 py-2", className)}
         {...props}
       />
     </FormItemContext.Provider>
@@ -97,7 +98,7 @@ function FormLabel({
     <Label
       data-slot="form-label"
       data-error={!!error}
-      className={cn("data-[error=true]:text-destructive", className)}
+      className={cn("data-[error=true]:text-destructive font-normal", className)}
       htmlFor={formItemId}
       {...props}
     />

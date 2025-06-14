@@ -289,7 +289,7 @@ export function Notifications(){
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 md:w-96 max-h-80 backdrop-blur-md bg-white/20 border border-white/30 rounded-xl shadow-md overflow-y-scroll">
                 
-                {notify?notify.notifications?.map((res:any,idx:any)=>{
+                {notify?.notifications.length>0?notify.notifications?.map((res:any,idx:any)=>{
                   return  (
                     <DropdownMenuItem 
                     key={idx} 

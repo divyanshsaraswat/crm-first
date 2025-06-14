@@ -74,6 +74,7 @@ export function DataTable<TData, TValue>({
   const [searchTerm, setSearchTerm] = useState<ColumnFiltersState>([])
   const [addfield, setaddfield] = useState<number>(0)
   const [loading, setloading] = useState<boolean>(false)
+  const [opendialog,setopendialog] = useState(false);
   const [typing, settyping] = useState<string>('')
   const [refresh,setrefresh] = useState<boolean>(false);
   const globalFilterFn = (row: any, columnId: string, filterValue: string) => {
@@ -236,6 +237,41 @@ export function DataTable<TData, TValue>({
     </>
   );
 }
+  const defaultVisibility: VisibilityState = {
+  id: true,
+  username: true,
+  email: true,
+  role: true,
+  parent_id: true,
+  created_at: true
+};
+const getColumnVisibilityFromLocalStorage = (): VisibilityState => {
+  try {
+    const data = localStorage.getItem('users');
+    if (!data) return defaultVisibility;
+
+    const visibleKeys: string[] = JSON.parse(data); // directly a string array
+    if (!Array.isArray(visibleKeys)) return defaultVisibility;
+
+    const normalizedVisibleKeys = visibleKeys.map(k => k.trim().toLowerCase());
+
+    const updatedVisibility: VisibilityState = {};
+    for (const key in defaultVisibility) {
+      updatedVisibility[key] = normalizedVisibleKeys.includes(key.toLowerCase());
+    }
+
+    console.log(updatedVisibility);
+    return updatedVisibility;
+  } catch (error) {
+    console.error('Failed to parse accounts from localStorage', error);
+    return defaultVisibility;
+  }
+};
+useEffect(() => {
+    const visibility = getColumnVisibilityFromLocalStorage();
+    console.log('Vibl',visibility);
+    setColumnVisibility(visibility);
+  }, []);
   return (
     <div className="rounded-md ">
       <div className="flex flex-col sm:flex-row  justify-between items-start sm:items-center gap-4 mb-4">
@@ -264,7 +300,20 @@ export function DataTable<TData, TValue>({
                             <div className="flex gap-2 w-full md:w-fit justify-between">
                                 
                              
-                                <Dialog>
+                                <Dialog open={opendialog} onOpenChange={()=>{
+                                 
+                                          const visibleColumns = table
+                                            .getAllColumns()
+                                            .filter((column) => column.getCanHide() && column.getIsVisible())
+                                            .map((column) => column.id);
+
+                                         
+                                          localStorage.setItem('users', JSON.stringify(visibleColumns));
+
+                                        
+                                          setopendialog(!opendialog);
+                                     
+                                }}>
                                     <DialogTrigger asChild>
                                         <Button variant="outline">
                                             Columns
@@ -302,9 +351,21 @@ export function DataTable<TData, TValue>({
                                           })}
                                         <MenubarSeparator />
                                           {addfield==1 && <Addfield/>}
-                                          <Button onClick={()=>{
+                                          <Button variant="outline" onClick={()=>{
                                             addfield==0?setaddfield(1):setaddfield(0)
                                           }} className={`${addfield==1?'hidden':'flex'}`}>Add Field</Button>
+                                          <Button onClick={() => {
+                                          const visibleColumns = table
+                                            .getAllColumns()
+                                            .filter((column) => column.getCanHide() && column.getIsVisible())
+                                            .map((column) => column.id);
+
+                                         
+                                          localStorage.setItem('users', JSON.stringify(visibleColumns));
+
+                                        
+                                          setopendialog(false);
+                                        }} className={`${addfield==1?'hidden':'flex'}`}>Close</Button>
                                           
                                     </DialogContent>
                                 </Dialog>

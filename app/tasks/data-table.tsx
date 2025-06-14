@@ -86,6 +86,7 @@ export function DataTable<TData, TValue>({
 })
   const [searchTerm, setSearchTerm] = useState<ColumnFiltersState>([])
   const [addfield, setaddfield] = useState<number>(0)
+  const [opendialog,setopendialog] = useState(false);
   const [loading, setloading] = useState<boolean>(false)
   const [typing, settyping] = useState<string>('')
   const [refresh,setrefresh] = useState<boolean>(false);
@@ -222,6 +223,7 @@ const statusbadges = (line: string) => {
   }
   function CustomTableRow({ row, child, depth }: { row: any, child?: boolean, depth?: number }) {
     let depthin = depth||0;
+
   return (
     <>
    
@@ -266,6 +268,47 @@ const statusbadges = (line: string) => {
     </>
   );
 }
+      const defaultVisibility: VisibilityState = {
+  id: true,
+  subject: true,
+  body: true,
+  status: true,
+  status_id:false,
+  due_date: true,
+  assigned_user:true,
+  assigned_user_id: false,
+  created_by:true,
+  contact_id: false,
+  created_at: false,
+  updated_at: false,
+};
+const getColumnVisibilityFromLocalStorage = (): VisibilityState => {
+  try {
+    const data = localStorage.getItem('tasks');
+    if (!data) return defaultVisibility;
+
+    const visibleKeys: string[] = JSON.parse(data); // directly a string array
+    if (!Array.isArray(visibleKeys)) return defaultVisibility;
+
+    const normalizedVisibleKeys = visibleKeys.map(k => k.trim().toLowerCase());
+
+    const updatedVisibility: VisibilityState = {};
+    for (const key in defaultVisibility) {
+      updatedVisibility[key] = normalizedVisibleKeys.includes(key.toLowerCase());
+    }
+
+    console.log(updatedVisibility);
+    return updatedVisibility;
+  } catch (error) {
+    console.error('Failed to parse accounts from localStorage', error);
+    return defaultVisibility;
+  }
+};
+    useEffect(() => {
+    const visibility = getColumnVisibilityFromLocalStorage();
+    console.log('Vibl',visibility);
+    setColumnVisibility(visibility);
+  }, []);
   return (
     <div className="rounded-md ">
       <div className="flex flex-col sm:flex-row  justify-between items-start sm:items-center gap-4 mb-4">
@@ -295,7 +338,20 @@ const statusbadges = (line: string) => {
                             <div className="flex gap-2">
                                 
                              
-                                <Dialog>
+                                <Dialog open={opendialog} onOpenChange={()=>{
+                                 
+                                          const visibleColumns = table
+                                            .getAllColumns()
+                                            .filter((column) => column.getCanHide() && column.getIsVisible())
+                                            .map((column) => column.id);
+
+                                         
+                                          localStorage.setItem('tasks', JSON.stringify(visibleColumns));
+
+                                        
+                                          setopendialog(!opendialog);
+                                     
+                                }}>
                                     <DialogTrigger asChild>
                                         <Button variant="outline">
                                             Columns
@@ -336,6 +392,18 @@ const statusbadges = (line: string) => {
                                           <Button onClick={()=>{
                                             addfield==0?setaddfield(1):setaddfield(0)
                                           }} className={`${addfield==1?'hidden':'flex'}`}>Add Field</Button>
+                                          <Button onClick={() => {
+                                          const visibleColumns = table
+                                            .getAllColumns()
+                                            .filter((column) => column.getCanHide() && column.getIsVisible())
+                                            .map((column) => column.id);
+
+                                         
+                                          localStorage.setItem('tasks', JSON.stringify(visibleColumns));
+
+                                        
+                                          setopendialog(false);
+                                        }} className={`${addfield==1?'hidden':'flex'}`}>Close</Button>
                                           
                                     </DialogContent>
                                 </Dialog>

@@ -11,6 +11,10 @@ async function getSettingsHandler(request:NextRequest) {
 async function updateSettingsHandler(request:NextRequest) {
   return await userController.updateSettings(request);
 }
+async function insertSettingsHandler(request:NextRequest){
+  return await userController.insertSettings(request);
+}
 
 export const GET = userAuth(getSettingsHandler);
+export const POST = userAuth(insertSettingsHandler);
 export const PUT = userAuth(updateSettingsHandler);

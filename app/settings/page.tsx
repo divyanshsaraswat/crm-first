@@ -10,10 +10,11 @@ import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Bell, Globe, Lock, Mail, Shield, User, Users, Workflow,Eye,Loader2 } from "lucide-react"
+import { Bell, Globe, Lock, Mail, Shield, User, Users, Workflow,Eye,Loader2, MessageCircleCode } from "lucide-react"
 import { Header } from "@/components/sidebar"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { FloatingLabelInput } from "@/components/ui/floating-input"
 
 type Preferences = {
   currency?: string;
@@ -236,6 +237,10 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
             <Bell className="h-4 w-4" />
             <span className="hidden md:inline">Notifications</span>
           </TabsTrigger>
+          <TabsTrigger value="whatsapp" className="flex items-center gap-2 py-2">
+            <MessageCircleCode className="h-4 w-4" />
+            <span className="hidden md:inline">WhatsApp</span>
+          </TabsTrigger>
           <TabsTrigger value="security" className="flex items-center gap-2 py-2">
             <Shield className="h-4 w-4" />
             <span className="hidden md:inline">Security</span>
@@ -275,10 +280,9 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                 }} className="space-y-6">
 
                 <div className="flex flex-col md:flex-row gap-6">
-                <div className="space-y-4 flex-1">
+                <div className="space-y-6 flex-1">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input 
+                  <FloatingLabelInput label="Name" 
                   id="name" 
                   name="name"
                   defaultValue={data.username}
@@ -286,8 +290,7 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input 
+                  <FloatingLabelInput label="Email" 
                   id="email"
                   name="email" 
                   type="email" 
@@ -296,8 +299,7 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="title">Job Title</Label>
-                  <Input 
+                  <FloatingLabelInput label="Job Title" 
                   id="title"
                   name="title"
                   defaultValue={data.role}
@@ -323,7 +325,71 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                         <span className="text-gray-500">Loading...</span>
                       </div>}
         </TabsContent>
+        <TabsContent value="whatsapp" className="space-y-6 ">
 
+                  {!loading && <Card>
+                    <CardHeader>
+                      <CardTitle>Profile Information</CardTitle>
+                      <CardDescription>Update your account profile information and email address.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <form onSubmit={(e) => {
+                        e.preventDefault();
+                        const formData = new FormData(e.currentTarget);
+                        const values = {
+                          phone: formData.get('phone'),
+                          email: formData.get('wid'),
+                          role: formData.get('watoken')
+                        };
+                        saveprofile(values);
+                        }} className="space-y-6">
+
+                        <div className="flex flex-col md:flex-row gap-6">
+                        <div className="space-y-6 flex-1">
+                        <div className="space-y-2">
+                          <FloatingLabelInput label="WhatsApp Phone" 
+                          id="phone" 
+                          name="phone"
+                          defaultValue=''
+                          required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FloatingLabelInput label="Wa_Ph ID" 
+                          id="wid"
+                          name="wid" 
+                          type="text" 
+                          defaultValue=''
+                          required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <FloatingLabelInput label="Wa_auth_token" 
+                          id="watoken"
+                          name="watoken"
+                          defaultValue=''
+                          required
+                          />
+                        </div>
+                        </div>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                        <Button type="button" variant="outline" onClick={() => router.refresh()}>
+                        Cancel
+                        </Button>
+                        <Button type="submit">
+                        Save Changes
+                        </Button>
+                        </div>
+                        </form>
+                    </CardContent>
+                  </Card>
+                  }
+                  {loading && <div className="flex flex-row items-center gap-2 justify-center h-64">
+                                <Loader2 className="animate-spin h-5 w-5" />
+                                <span className="text-gray-500">Loading...</span>
+                              </div>}
+        </TabsContent>
         {/* Notifications Tab */}
         <TabsContent value="notifications" className="space-y-6">
           <Card>
@@ -434,8 +500,7 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
               }} className="space-y-6">
               <div className="space-y-4">
                 <div className="space-y-2">
-                <Label htmlFor="current-password">Current Password</Label>
-                <Input 
+                <FloatingLabelInput label="Current Password" 
                   id="current-password" 
                   name="current-password"
                   type="password" 
@@ -443,8 +508,7 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                 />
                 </div>
                 <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
-                <Input 
+                <FloatingLabelInput label="New Password" 
                   id="new-password" 
                   name="new-password"
                   type="password" 
@@ -452,8 +516,7 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                 />
                 </div>
                 <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm New Password</Label>
-                <Input 
+                <FloatingLabelInput label="Confirm New Password" 
                   id="confirm-password" 
                   name="confirm-password"
                   type="password" 

@@ -34,6 +34,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Label } from "./ui/label"
 import { toast } from "sonner"
+import { FloatingLabelInput } from "./ui/floating-input"
 
 const formContactSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
@@ -1166,24 +1167,40 @@ export function CrmTaskModal({ data }: any) {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
             <ScrollArea className="flex-1 px-6 py-4">
-              <div className="grid gap-6 pb-4">
+              <div className="grid gap-2 pb-4">
                 <FormField name="subject" control={form.control} render={({ field }) => (
-                  <FormItem><FormLabel>Subject</FormLabel>
-                  <FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem>
+                  <FormControl><FloatingLabelInput label="Subject" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField name="body" control={form.control} render={({ field }) => (
-                  <FormItem><FormLabel>Body</FormLabel>
-                  <FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem>
+                  <FormControl><Textarea placeholder="Body" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
+
+                <FormField name="due_date" control={form.control} render={({ field }) => (
+                                  <FormItem>
+                                  <FormControl>
+                                    <FloatingLabelInput 
+                                    label="Due Date"
+                                      type="date"
+                                      value={field.value?.split("T")[0] || ""}
+                                      onChange={(e) => field.onChange(e.target.value)}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                  </FormItem>
+                                )} />
+
+                <div className="flex flex-row justify-between gap-16">
                 <FormField
                 control={form.control}
                 name="status"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status*</FormLabel>
+                  <FormItem className="w-1/2">
+                    
                     <Select onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select Status..." />
                         </SelectTrigger>
                       </FormControl>
@@ -1197,27 +1214,16 @@ export function CrmTaskModal({ data }: any) {
                   </FormItem>
                 )}
                 />
-                <FormField name="due_date" control={form.control} render={({ field }) => (
-                  <FormItem><FormLabel>Due Date</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="date"
-                      value={field.value?.split("T")[0] || ""}
-                      onChange={(e) => field.onChange(e.target.value)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                  </FormItem>
-                )} />
+                
                 <FormField
                 control={form.control}
                 name="assigned_user_id"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Assign To*</FormLabel>
-                    <Select onValueChange={field.onChange}>
+                  <FormItem className="w-1/2">
+                    
+                    <Select onValueChange={field.onChange} >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Select User" />
                         </SelectTrigger>
                       </FormControl>
@@ -1231,6 +1237,7 @@ export function CrmTaskModal({ data }: any) {
                   </FormItem>
                 )}
                 />
+                </div>
               </div>
             </ScrollArea>
             <DialogFooter className="px-6 py-4 border-t mt-auto">
@@ -1371,24 +1378,38 @@ export function CrmTaskEditModal({ data,updateparent }: any) {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
             <ScrollArea className="flex-1 px-6 py-4">
-              <div className="grid gap-6 pb-4">
+              <div className="grid gap-2 pb-4">
                 <FormField name="subject" control={form.control} render={({ field }) => (
-                  <FormItem><FormLabel>Subject</FormLabel>
-                  <FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem>
+                  <FormControl><FloatingLabelInput label="Subject" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
                 <FormField name="body" control={form.control} render={({ field }) => (
-                  <FormItem><FormLabel>Body</FormLabel>
-                  <FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
+                  <FormItem>
+                  <FormControl><Textarea placeholder="Body" {...field} /></FormControl><FormMessage /></FormItem>
                 )} />
+                 <FormField name="due_date" control={form.control} render={({ field }) => (
+                  <FormItem>
+                  <FormControl>
+                    <FloatingLabelInput label="Due Date"
+                      type="date"
+                      value={field.value?.split("T")[0] || ""}
+                      onChange={(e) => field.onChange(e.target.value)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                  </FormItem>
+                )} />
+
+                <div className="flex flex-row w-full">
                 <FormField
                 control={form.control}
                 name="status"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="w-full">
                     <FormLabel>Status*</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-1/2">
                           <SelectValue placeholder="Select Status..." />
                         </SelectTrigger>
                       </FormControl>
@@ -1402,27 +1423,16 @@ export function CrmTaskEditModal({ data,updateparent }: any) {
                   </FormItem>
                 )}
                 />
-                <FormField name="due_date" control={form.control} render={({ field }) => (
-                  <FormItem><FormLabel>Due Date</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="date"
-                      value={field.value?.split("T")[0] || ""}
-                      onChange={(e) => field.onChange(e.target.value)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                  </FormItem>
-                )} />
+               
                 <FormField
                 control={form.control}
                 name="assigned_user_id"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="w-full">
                     <FormLabel>Assign To*</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-1/2">
                           <SelectValue placeholder="Select User" />
                         </SelectTrigger>
                       </FormControl>
@@ -1436,6 +1446,7 @@ export function CrmTaskEditModal({ data,updateparent }: any) {
                   </FormItem>
                 )}
                 />
+                </div>
               </div>
             </ScrollArea>
             <DialogFooter className="px-6 py-4 border-t mt-auto">
@@ -1591,9 +1602,8 @@ export function CrmUsersModal() {
           name="username"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Username*</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. johndoe123" {...field} />
+                <FloatingLabelInput label="Username"  {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -1606,9 +1616,8 @@ export function CrmUsersModal() {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email*</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="john@example.com" {...field} />
+                <FloatingLabelInput label="Email" type="email"  {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -1621,11 +1630,10 @@ export function CrmUsersModal() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password*</FormLabel>
               <FormControl>
-                <div className="flex flex-row justify-between">
-                {show?<Input type="password" placeholder="password" {...field} />:
-                <Input type="text" placeholder="password" {...field} />}
+                <div className="flex flex-row justify-between w-full">
+                {show?<FloatingLabelInput label="Password" type="password" className="w-116" {...field} />:
+                <FloatingLabelInput label="Password" type="text" className="w-116"  {...field} />}
                 <button 
                 className="px-5 cursor-pointer"
                 onClick={(e)=>{
@@ -1806,85 +1814,85 @@ export function CrmAccountsModal() {
       <Form {...form}>
   <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
     <ScrollArea className="flex-1 px-6 py-4">
-      <div className="grid gap-6 pb-4">
+      <div className="grid gap-4 pb-2">
 
         
         <FormField name="name" control={form.control} render={({ field }) => (
-          <FormItem><FormLabel>Company Name</FormLabel>
-          <FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+          <FormItem>
+          <FormControl><FloatingLabelInput {...field} label="Company Name"/></FormControl><FormMessage /></FormItem>
         )} />
        
 
         <FormField name="email" control={form.control} render={({ field }) => (
-          <FormItem><FormLabel>Email</FormLabel>
-          <FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
+          <FormItem>
+          <FormControl><FloatingLabelInput label="Email" type="email" {...field} /></FormControl><FormMessage /></FormItem>
         )} />
 
         <FormField name="phone" control={form.control} render={({ field }) => (
-          <FormItem><FormLabel>Phone</FormLabel>
-          <FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+          <FormItem>
+          <FormControl><FloatingLabelInput label="Phone" {...field} /></FormControl><FormMessage /></FormItem>
         )} />
 
         <FormField name="waphone" control={form.control} render={({ field }) => (
-          <FormItem><FormLabel>Whatsapp Phone</FormLabel>
-          <FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+          <FormItem>
+          <FormControl><FloatingLabelInput label="WhatsApp Phone" {...field} /></FormControl><FormMessage /></FormItem>
         )} />
 
         <FormField name="BusinessNature" control={form.control} render={({ field }) => (
-          <FormItem><FormLabel>Business Nature</FormLabel>
-          <FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+          <FormItem>
+          <FormControl><FloatingLabelInput label="Business Nature" {...field} /></FormControl><FormMessage /></FormItem>
         )} />
 
         <FormField name="Address1" control={form.control} render={({ field }) => (
-          <FormItem><FormLabel>Address</FormLabel>
-          <FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+          <FormItem>
+          <FormControl><FloatingLabelInput label="Address" {...field} /></FormControl><FormMessage /></FormItem>
         )} />
 
         <FormField name="Address2" control={form.control} render={({ field }) => (
-          <FormItem><FormLabel>Address 2</FormLabel>
-          <FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+          <FormItem>
+          <FormControl><FloatingLabelInput label="Address 2" {...field} /></FormControl><FormMessage /></FormItem>
         )} />
 
         <FormField name="City" control={form.control} render={({ field }) => (
-          <FormItem><FormLabel>City</FormLabel>
-          <FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+          <FormItem>
+          <FormControl><FloatingLabelInput label="City" {...field} /></FormControl><FormMessage /></FormItem>
         )} />
 
         <FormField name="State" control={form.control} render={({ field }) => (
-          <FormItem><FormLabel>State</FormLabel>
-          <FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+          <FormItem>
+          <FormControl><FloatingLabelInput label="State" {...field} /></FormControl><FormMessage /></FormItem>
         )} />
 
         <FormField name="Country" control={form.control} render={({ field }) => (
-          <FormItem><FormLabel>Country</FormLabel>
-          <FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+          <FormItem>
+          <FormControl><FloatingLabelInput label="Country" {...field} /></FormControl><FormMessage /></FormItem>
         )} />
 
         <FormField name="Zip" control={form.control} render={({ field }) => (
-          <FormItem><FormLabel>Zip Code</FormLabel>
-          <FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+          <FormItem>
+          <FormControl><FloatingLabelInput label="Zip" {...field} /></FormControl><FormMessage /></FormItem>
         )} />
 
         <FormField name="Zone" control={form.control} render={({ field }) => (
-          <FormItem><FormLabel>Zone</FormLabel>
-          <FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+          <FormItem>
+          <FormControl><FloatingLabelInput label="Zone" {...field} /></FormControl><FormMessage /></FormItem>
         )} />
 
         <FormField name="Rating" control={form.control} render={({ field }) => (
-          <FormItem><FormLabel>Rating</FormLabel>
-          <FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+          <FormItem>
+          <FormControl><FloatingLabelInput label="Rating" {...field} /></FormControl><FormMessage /></FormItem>
         )} />
 
 
         <FormField name="website" control={form.control} render={({ field }) => (
-          <FormItem><FormLabel>Website</FormLabel>
-          <FormControl><Input  {...field} /></FormControl><FormMessage /></FormItem>
+          <FormItem>
+          <FormControl><FloatingLabelInput label="Website"  {...field} /></FormControl><FormMessage /></FormItem>
         )} />
 
         <FormField name="JoiningDate" control={form.control} render={({ field }) => (
-          <FormItem><FormLabel>Joining Date</FormLabel>
+          <FormItem>
           <FormControl>
-            <Input 
+            <FloatingLabelInput label="Joining Date" 
               type="date" 
               value={field.value?.toISOString().split('T')[0]} 
               onChange={(e) => {field.onChange(new Date(e.target.value))
@@ -1897,18 +1905,18 @@ export function CrmAccountsModal() {
         )} />
 
 <FormField name="ContPerson" control={form.control} render={({ field }) => (
-  <FormItem><FormLabel>Contact Person</FormLabel>
-  <FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+  <FormItem>
+  <FormControl><FloatingLabelInput label="Contact Person" {...field} /></FormControl><FormMessage /></FormItem>
 )} />
 
-
+<div className="w-full flex flex-row  justify-between">
 <FormField
 control={form.control}
 name="DesignationID"
 render={({ field }) => (
   <FormItem>
-    <FormLabel>Designation*</FormLabel>
     <Select onValueChange={field.onChange} defaultValue={field.value}>
+      <FormLabel>Designation</FormLabel>
       <FormControl>
         <SelectTrigger>
           <SelectValue placeholder="Select Designation" />
@@ -1929,8 +1937,9 @@ render={({ field }) => (
           name="SourceID"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Source*</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormLabel>Source</FormLabel>
+
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select Source" />
@@ -1953,8 +1962,9 @@ render={({ field }) => (
           name="StatusID"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Status*</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormLabel>Status</FormLabel>
+
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select Status" />
@@ -1970,7 +1980,7 @@ render={({ field }) => (
             </FormItem>
           )}
         />
-
+</div>
       </div>
     </ScrollArea>
 
