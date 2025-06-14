@@ -12,7 +12,7 @@ async function updateSettingsHandler(request:NextRequest) {
   return await userController.updateSettings(request);
 }
 async function insertSettingsHandler(request:NextRequest){
-  return await userController.insertSettings(request);
+  return await userController.insertSetting(request);
 }
 
 export const GET = userAuth(getSettingsHandler);
