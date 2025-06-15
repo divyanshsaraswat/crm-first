@@ -294,10 +294,10 @@ export default function LoginPage() {
         </div>
       </ParallaxElement>
 
-      <div className="min-h-screen w-screen flex flex-col gap-6 items-center justify-center p-4 relative z-10 cursor-pointer" onClick={()=>router.push('/')}>
+      <div className="min-h-screen w-screen flex flex-col gap-6 items-center justify-center p-4 relative z-10 ">
         {/* Logo Section */}
         <div className="text-center mb-8 animate-slideInUp">
-          <div className="flex items-center justify-center space-x-3 mb-4 group">
+          <div className="flex items-center justify-center space-x-3 mb-4 group cursor-pointer"  onClick={()=>router.push('/')}>
             <div className="w-12 h-12 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
               <BarChart3 className="w-7 h-7 text-white" />
             </div>
