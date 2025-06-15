@@ -7,7 +7,7 @@ import { ReactNode } from "react";
 
 export default function ClientLayoutWrapper({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const hideSidebar = pathname.startsWith("/login") || pathname.startsWith("/register");
+  const hideSidebar = pathname === "/" || pathname.startsWith("/login") || pathname.startsWith("/register");
 
   return (
     <>
