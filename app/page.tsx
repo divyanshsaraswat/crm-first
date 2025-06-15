@@ -771,11 +771,11 @@ export default function CRMLanding() {
         <div className="container mx-auto px-4 lg:px-6 relative z-10">
           <TimelineAnimation>
             <div className="text-center max-w-4xl mx-auto">
-              <ParallaxElement speed={0.1}>
+              {/* <ParallaxElement speed={0.1}>
                 <Badge className="mb-6 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-all duration-300 transform hover:scale-105 animate-morphBounce">
                   🚀 Trusted by 10,000+ businesses worldwide
                 </Badge>
-              </ParallaxElement>
+              </ParallaxElement> */}
 
               <h1
                 className="text-4xl lg:text-6xl font-bold text-slate-900 mb-6 leading-tight"
