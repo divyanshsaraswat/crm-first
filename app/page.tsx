@@ -688,7 +688,9 @@ export default function CRMLanding() {
                   <Button
                     variant="ghost"
                     className="w-full text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 transition-all duration-300 justify-start"
-                    onClick={() => setIsMenuOpen(false)}
+                    onClick={() => {
+                      router.push('/login')
+                      setIsMenuOpen(false)}}
                   >
                     Sign In
                   </Button>
