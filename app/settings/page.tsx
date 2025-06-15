@@ -44,6 +44,7 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
  const router = useRouter();
  const [preferences, dispatch] = useReducer(preferencesReducer, {});
  const [data,setdata] = useState<any>({});
+ const [wdata,setwdata] = useState<any>({});
  const [pass,setpass] = useState<string>();
  const [cpass,setcpass] = useState<string>();
  const [loading,setloading] = useState<boolean>(true);
@@ -63,6 +64,28 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
             toast("✅ Data Updated Successfully.")
         }).catch((e)=>{console.error(e)})
         }
+   
+
+    fetchData();
+ }
+  const savewhatsapp = async(values:any)=>{
+   const fetchData = async () => {
+          console.log({...values});
+          const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/wh`,{
+            credentials:'include',
+            method:"PUT",
+            headers: {
+                'Content-Type': 'application/json',
+                'Cookie': token
+            },
+            body: JSON.stringify({...values})
+          }).then(async(res)=>{
+            toast("✅ Data Updated Successfully.")
+        }).catch((e)=>{console.error(e)})
+        }
+   
+
     fetchData();
  }
  const forgotpassword = async(values:any)=>{
@@ -212,9 +235,21 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
           }).then(async(res)=>{
             const result = await res.json()
             setdata(result[0][0])
-            setloading(false);
+
+            
+            const rest = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/wh`,{
+              credentials:'include',
+              method:"GET",
+              headers: {
+                'Content-Type': 'application/json',
+                'Cookie': token
+              }})
+              const output = await rest.json()
+              setwdata(output[0][0])
+              setloading(false);
         }).catch((e)=>{console.error(e)})
         }
+       
     fetchData()
     loadPreferences();
   }, []);
@@ -338,10 +373,10 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                         const formData = new FormData(e.currentTarget);
                         const values = {
                           phone: formData.get('phone'),
-                          email: formData.get('wid'),
-                          role: formData.get('watoken')
+                          wid: formData.get('wid'),
+                          watoken: formData.get('watoken')
                         };
-                        saveprofile(values);
+                        savewhatsapp(values);
                         }} className="space-y-6">
 
                         <div className="flex flex-col md:flex-row gap-6">
@@ -350,7 +385,8 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                           <FloatingLabelInput label="WhatsApp Phone" 
                           id="phone" 
                           name="phone"
-                          defaultValue=''
+                          defaultValue={wdata.Wh_phone}
+                           disabled={true}
                           required
                           />
                         </div>
@@ -359,16 +395,16 @@ const preferencesReducer = (state: Preferences, action: PreferencesAction): Pref
                           id="wid"
                           name="wid" 
                           type="text" 
-                          defaultValue=''
-                          required
+                          defaultValue={wdata.Wh_ID}
+                         
                           />
                         </div>
                         <div className="space-y-2">
                           <FloatingLabelInput label="Wa_auth_token" 
                           id="watoken"
                           name="watoken"
-                          defaultValue=''
-                          required
+                          defaultValue={wdata.Wh_auth}
+                         
                           />
                         </div>
                         </div>

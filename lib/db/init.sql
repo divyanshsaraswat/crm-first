@@ -232,7 +232,8 @@ CREATE TABLE user_settings (
     time_format NVARCHAR(10) DEFAULT '24h',
     currency NVARCHAR(10) DEFAULT 'USD',
     theme NVARCHAR(20) DEFAULT 'light',
-    auto_refresh_interval INT DEFAULT 60, -- minutes or seconds based on frontend logic
+    wh_id NVARCHAR(MAX),
+    wa_token NVARCHAR(MAX),
 
     created_at DATETIME2 DEFAULT SYSUTCDATETIME(),
     updated_at DATETIME2 DEFAULT SYSUTCDATETIME(),

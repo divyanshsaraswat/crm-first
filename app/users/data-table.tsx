@@ -139,7 +139,9 @@ export function DataTable<TData, TValue>({
         }
       }
       fetchData();
-      // window.location.reload();
+       setTimeout(()=>{
+      window.location.reload();
+    },1500)
 
   }
   const exportdata = (data:string[])=>{

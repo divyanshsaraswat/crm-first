@@ -251,6 +251,7 @@ export default function Sidebar() {
 export function Notifications(){
   const [notify, setNotify] = useState<any>(null);
   const [token,settoken] = useState<string>();
+  const router = useRouter();
   const [isreads,setisreads]= useState<boolean>();
   useEffect(() => {
     const fetchData = async () => {
@@ -294,6 +295,11 @@ export function Notifications(){
                     <DropdownMenuItem 
                     key={idx} 
                     className="cursor-pointer"
+                    onClick={()=>{
+                      if (res.type=="tasks"){
+                        router.push('/tasks')
+                      }
+                    }}
                     onMouseEnter={async () => {
                       if (!res.is_read) {
                       try {

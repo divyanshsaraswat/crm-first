@@ -57,7 +57,7 @@ export default function NestedTable({did}:any){
             return(
               <>
             {/* <div className="absolute left-0 border">a</div> */}
-          <tr>
+          <tr key={index}>
             <td className="px-4 py-2 border">{item.id}</td>
             <td className="px-4 py-2 border">{statusbadges(item.status)}</td>
             <td className="px-4 py-2 border">{item.subject}</td>
