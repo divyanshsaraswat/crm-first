@@ -30,7 +30,6 @@ import {
   ArrowUp,
 } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 
 // Advanced Scroll Animation Hook
 function useScrollAnimation() {
@@ -63,40 +62,6 @@ function useScrollAnimation() {
   }, [])
 
   return { scrollY, scrollVelocity, scrollDirection }
-}
-
-// Complex Intersection Observer Hook
-function useScrollTrigger(options = {}) {
-  const [isVisible, setIsVisible] = useState(false)
-  const [intersectionRatio, setIntersectionRatio] = useState(0)
-  const [hasTriggered, setHasTriggered] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsVisible(entry.isIntersecting)
-        setIntersectionRatio(entry.intersectionRatio)
-
-        if (entry.isIntersecting && !hasTriggered) {
-          setHasTriggered(true)
-        }
-      },
-      {
-        threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
-        rootMargin: "-10% 0px -10% 0px",
-        ...options,
-      },
-    )
-
-    if (ref.current) {
-      observer.observe(ref.current)
-    }
-
-    return () => observer.disconnect()
-  }, [hasTriggered])
-
-  return { ref, isVisible, intersectionRatio, hasTriggered }
 }
 
 // Scroll Progress Hook
@@ -183,47 +148,31 @@ function ScrollProgressBar() {
   )
 }
 
-// Timeline Animation Component
-function TimelineAnimation({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
-  const { ref, intersectionRatio, hasTriggered } = useScrollTrigger()
-  const [animationPhase, setAnimationPhase] = useState(0)
-
-  useEffect(() => {
-    if (hasTriggered) {
-      const phases = [0.2, 0.4, 0.6, 0.8, 1.0]
-      const currentPhase = phases.findIndex((threshold) => intersectionRatio >= threshold)
-      if (currentPhase !== -1) {
-        setTimeout(() => setAnimationPhase(currentPhase + 1), delay)
-      }
-    }
-  }, [intersectionRatio, hasTriggered, delay])
-
-  return (
-    <div
-      ref={ref}
-      className="transition-all duration-1000 ease-out"
-      style={{
-        opacity: Math.min(intersectionRatio * 2, 1),
-        transform: `
-          translateY(${Math.max(50 - intersectionRatio * 100, 0)}px)
-          scale(${0.8 + intersectionRatio * 0.2})
-          rotateX(${Math.max(15 - intersectionRatio * 30, 0)}deg)
-        `,
-        filter: `blur(${Math.max(5 - intersectionRatio * 10, 0)}px)`,
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
 // Animated Counter Component with scroll trigger
 function AnimatedCounter({ end, duration = 2000, suffix = "" }: { end: number; duration?: number; suffix?: string }) {
   const [count, setCount] = useState(0)
-  const { ref, hasTriggered } = useScrollTrigger()
+  const [isVisible, setIsVisible] = useState(false)
+  const ref = useRef<HTMLSpanElement>(null)
 
   useEffect(() => {
-    if (!hasTriggered) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isVisible) {
+          setIsVisible(true)
+        }
+      },
+      { threshold: 0.1 },
+    )
+
+    if (ref.current) {
+      observer.observe(ref.current)
+    }
+
+    return () => observer.disconnect()
+  }, [isVisible])
+
+  useEffect(() => {
+    if (!isVisible) return
 
     let startTime: number
     const animate = (currentTime: number) => {
@@ -251,7 +200,7 @@ function AnimatedCounter({ end, duration = 2000, suffix = "" }: { end: number; d
     }
 
     requestAnimationFrame(animate)
-  }, [hasTriggered, end, duration])
+  }, [isVisible, end, duration])
 
   return (
     <span ref={ref} className="inline-block">
@@ -274,29 +223,6 @@ function VelocityElement({ children }: { children: React.ReactNode }) {
           skewY(${scrollDirection === "down" ? Math.min(scrollVelocity * 0.5, 2) : -Math.min(scrollVelocity * 0.5, 2)}deg)
         `,
         filter: `blur(${Math.min(scrollVelocity * 0.5, 1)}px)`,
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
-// 3D Card with Scroll Perspective
-function Scroll3DCard({ children, index }: { children: React.ReactNode; index: number }) {
-  const { ref, intersectionRatio } = useScrollTrigger()
-  const { scrollY } = useScrollAnimation()
-
-  return (
-    <div
-      ref={ref}
-      className="perspective-1000"
-      style={{
-        transform: `
-          translateZ(${intersectionRatio * 100}px)
-          rotateX(${Math.max(45 - intersectionRatio * 90, -45)}deg)
-          rotateY(${Math.sin(scrollY * 0.001 + index) * 10}deg)
-        `,
-        transformStyle: "preserve-3d",
       }}
     >
       {children}
@@ -357,7 +283,7 @@ function ScrollParticles() {
   )
 }
 
-// Interactive Chat Demo Component (keeping the existing one)
+// Interactive Chat Demo Component
 function InteractiveChatDemo() {
   const [currentStep, setCurrentStep] = useState(0)
   const [messages, setMessages] = useState<
@@ -448,188 +374,186 @@ function InteractiveChatDemo() {
   }, [currentStep])
 
   return (
-    <TimelineAnimation>
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h3 className="text-2xl font-bold text-slate-900 mb-4">{chatSteps[currentStep].title}</h3>
-          <div className="flex justify-center space-x-2">
-            {chatSteps.map((_, index) => (
-              <div
-                key={index}
-                className={`w-3 h-3 rounded-full transition-all duration-500 ${
-                  index === currentStep ? "bg-emerald-500 scale-125" : "bg-slate-300"
-                }`}
-              />
-            ))}
+    <div className="max-w-4xl mx-auto">
+      <div className="text-center mb-8">
+        <h3 className="text-2xl font-bold text-slate-900 mb-4">{chatSteps[currentStep].title}</h3>
+        <div className="flex justify-center space-x-2">
+          {chatSteps.map((_, index) => (
+            <div
+              key={index}
+              className={`w-3 h-3 rounded-full transition-all duration-500 ${
+                index === currentStep ? "bg-emerald-500 scale-125" : "bg-slate-300"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+        {/* Chat Header */}
+        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-4 text-white">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+              <MessageCircle className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="font-semibold">Customer Support</h4>
+              <p className="text-sm text-emerald-100">
+                Online • Avg response: {currentStep === 0 ? "15 min" : "30 sec"}
+              </p>
+            </div>
+            <div className="ml-auto">
+              {currentStep === 1 && (
+                <div className="flex items-center space-x-1 bg-white/20 px-3 py-1 rounded-full">
+                  <Bot className="w-4 h-4" />
+                  <span className="text-xs">AI-Powered</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
-          {/* Chat Header */}
-          <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-4 text-white">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                <MessageCircle className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="font-semibold">Customer Support</h4>
-                <p className="text-sm text-emerald-100">
-                  Online • Avg response: {currentStep === 0 ? "15 min" : "30 sec"}
-                </p>
-              </div>
-              <div className="ml-auto">
-                {currentStep === 1 && (
-                  <div className="flex items-center space-x-1 bg-white/20 px-3 py-1 rounded-full">
-                    <Bot className="w-4 h-4" />
-                    <span className="text-xs">AI-Powered</span>
+        {/* Chat Messages */}
+        <div className="h-96 overflow-y-auto p-4 space-y-4 bg-slate-50">
+          {messages.map((message, index) => (
+            <div
+              key={message.id}
+              className={`flex ${message.type === "user" ? "justify-end" : "justify-start"} animate-slideInUp`}
+              style={{ animationDelay: `${index * 0.2}s` }}
+            >
+              <div
+                className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
+                  message.type === "user"
+                    ? "bg-emerald-500 text-white rounded-br-md"
+                    : message.type === "system"
+                      ? "bg-yellow-100 text-yellow-800 rounded-lg border border-yellow-200"
+                      : "bg-white text-slate-800 rounded-bl-md shadow-md border border-slate-200"
+                }`}
+              >
+                <div className="flex items-start space-x-2">
+                  {message.type === "agent" && (
+                    <div className="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      {currentStep === 1 ? (
+                        <Bot className="w-3 h-3 text-emerald-600" />
+                      ) : (
+                        <User className="w-3 h-3 text-emerald-600" />
+                      )}
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <p className="text-sm whitespace-pre-line">{message.content}</p>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className={`text-xs ${message.type === "user" ? "text-emerald-100" : "text-slate-500"}`}>
+                        {message.timestamp}
+                      </span>
+                      {message.satisfaction && (
+                        <div className="flex items-center space-x-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3 h-3 ${
+                                i < message.satisfaction! ? "text-yellow-400 fill-current" : "text-slate-300"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {message.isTyping && (
+                  <div className="flex space-x-1 mt-2">
+                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+                    <div
+                      className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
                   </div>
                 )}
               </div>
             </div>
-          </div>
-
-          {/* Chat Messages */}
-          <div className="h-96 overflow-y-auto p-4 space-y-4 bg-slate-50">
-            {messages.map((message, index) => (
-              <div
-                key={message.id}
-                className={`flex ${message.type === "user" ? "justify-end" : "justify-start"} animate-slideInUp`}
-                style={{ animationDelay: `${index * 0.2}s` }}
-              >
-                <div
-                  className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
-                    message.type === "user"
-                      ? "bg-emerald-500 text-white rounded-br-md"
-                      : message.type === "system"
-                        ? "bg-yellow-100 text-yellow-800 rounded-lg border border-yellow-200"
-                        : "bg-white text-slate-800 rounded-bl-md shadow-md border border-slate-200"
-                  }`}
-                >
-                  <div className="flex items-start space-x-2">
-                    {message.type === "agent" && (
-                      <div className="w-6 h-6 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        {currentStep === 1 ? (
-                          <Bot className="w-3 h-3 text-emerald-600" />
-                        ) : (
-                          <User className="w-3 h-3 text-emerald-600" />
-                        )}
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <p className="text-sm whitespace-pre-line">{message.content}</p>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className={`text-xs ${message.type === "user" ? "text-emerald-100" : "text-slate-500"}`}>
-                          {message.timestamp}
-                        </span>
-                        {message.satisfaction && (
-                          <div className="flex items-center space-x-1">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-3 h-3 ${
-                                  i < message.satisfaction! ? "text-yellow-400 fill-current" : "text-slate-300"
-                                }`}
-                              />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  {message.isTyping && (
-                    <div className="flex space-x-1 mt-2">
-                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-                      <div
-                        className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
-                        style={{ animationDelay: "0.1s" }}
-                      ></div>
-                      <div
-                        className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"
-                        style={{ animationDelay: "0.2s" }}
-                      ></div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Chat Input */}
-          <div className="p-4 border-t border-slate-200 bg-white">
-            <div className="flex items-center space-x-3">
-              <Input
-                placeholder="Type your message..."
-                className="flex-1 border-slate-300 focus:border-emerald-500"
-                disabled
-              />
-              <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600" disabled>
-                <Send className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* Results Comparison */}
-        <div className="grid md:grid-cols-2 gap-6 mt-8">
-          <Card
-            className={`transition-all duration-500 ${currentStep === 0 ? "ring-2 ring-red-200 bg-red-50" : "opacity-60"}`}
-          >
-            <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Clock className="w-6 h-6 text-red-500" />
-              </div>
-              <h4 className="font-bold text-red-600 mb-2">Traditional Approach</h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>Response Time:</span>
-                  <span className="font-bold text-red-600">15 minutes</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Customer Satisfaction:</span>
-                  <span className="font-bold text-red-600">2/5 ⭐</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Conversion Rate:</span>
-                  <span className="font-bold text-red-600">12%</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card
-            className={`transition-all duration-500 ${currentStep === 1 ? "ring-2 ring-emerald-200 bg-emerald-50" : "opacity-60"}`}
-          >
-            <CardContent className="p-6 text-center">
-              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Zap className="w-6 h-6 text-emerald-500" />
-              </div>
-              <h4 className="font-bold text-emerald-600 mb-2">With ConvertCRM</h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>Response Time:</span>
-                  <span className="font-bold text-emerald-600">30 seconds</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Customer Satisfaction:</span>
-                  <span className="font-bold text-emerald-600">5/5 ⭐</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Conversion Rate:</span>
-                  <span className="font-bold text-emerald-600">47%</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Chat Input */}
+        <div className="p-4 border-t border-slate-200 bg-white">
+          <div className="flex items-center space-x-3">
+            <Input
+              placeholder="Type your message..."
+              className="flex-1 border-slate-300 focus:border-emerald-500"
+              disabled
+            />
+            <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600" disabled>
+              <Send className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
-    </TimelineAnimation>
+
+      {/* Results Comparison */}
+      <div className="grid md:grid-cols-2 gap-6 mt-8">
+        <Card
+          className={`transition-all duration-500 ${currentStep === 0 ? "ring-2 ring-red-200 bg-red-50" : "opacity-60"}`}
+        >
+          <CardContent className="p-6 text-center">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock className="w-6 h-6 text-red-500" />
+            </div>
+            <h4 className="font-bold text-red-600 mb-2">Traditional Approach</h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span>Response Time:</span>
+                <span className="font-bold text-red-600">15 minutes</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Customer Satisfaction:</span>
+                <span className="font-bold text-red-600">2/5 ⭐</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Conversion Rate:</span>
+                <span className="font-bold text-red-600">12%</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card
+          className={`transition-all duration-500 ${currentStep === 1 ? "ring-2 ring-emerald-200 bg-emerald-50" : "opacity-60"}`}
+        >
+          <CardContent className="p-6 text-center">
+            <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Zap className="w-6 h-6 text-emerald-500" />
+            </div>
+            <h4 className="font-bold text-emerald-600 mb-2">With ConvertCRM</h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span>Response Time:</span>
+                <span className="font-bold text-emerald-600">30 seconds</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Customer Satisfaction:</span>
+                <span className="font-bold text-emerald-600">5/5 ⭐</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Conversion Rate:</span>
+                <span className="font-bold text-emerald-600">47%</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   )
 }
 
 export default function CRMLanding() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { scrollY, scrollVelocity } = useScrollAnimation()
-  const router = useRouter();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white overflow-hidden">
       {/* Scroll Progress Bar */}
@@ -683,21 +607,6 @@ export default function CRMLanding() {
           background-size: 200% 100%;
           animation: shimmer 2s infinite;
         }
-        
-        .perspective-1000 {
-          perspective: 1000px;
-        }
-        
-        .scroll-reveal {
-          opacity: 0;
-          transform: translateY(50px) scale(0.9);
-          transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-        
-        .scroll-reveal.active {
-          opacity: 1;
-          transform: translateY(0) scale(1);
-        }
       `}</style>
 
       {/* Enhanced Header with scroll effects */}
@@ -728,7 +637,6 @@ export default function CRMLanding() {
                 className="text-slate-600 hover:text-emerald-600 transition-all duration-300 relative group"
                 style={{
                   animationDelay: `${index * 100}ms`,
-                  transform: `translateY(${Math.sin(scrollY * 0.01 + index) * 2}px)`,
                 }}
               >
                 {item}
@@ -741,7 +649,6 @@ export default function CRMLanding() {
             <Button
               variant="ghost"
               className="text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 transition-all duration-300"
-              onClick={()=>router.push('/login')}
             >
               Sign In
             </Button>
@@ -759,6 +666,43 @@ export default function CRMLanding() {
         </div>
       </header>
 
+      {/* Mobile Navigation Menu */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden">
+          <div className="fixed top-16 left-0 right-0 bg-white border-b border-slate-200 shadow-xl">
+            <nav className="container mx-auto px-4 py-6">
+              <div className="flex flex-col space-y-4">
+                {["Features", "Benefits", "Pricing", "Demo"].map((item) => (
+                  <Link
+                    key={item}
+                    href={`#${item.toLowerCase()}`}
+                    className="text-slate-600 hover:text-emerald-600 transition-colors duration-300 py-2 text-lg font-medium"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {item}
+                  </Link>
+                ))}
+                <div className="border-t border-slate-200 pt-4 mt-4 space-y-3">
+                  <Button
+                    variant="ghost"
+                    className="w-full text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 transition-all duration-300 justify-start"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Sign In
+                  </Button>
+                  <Button
+                    className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Start Free Trial
+                  </Button>
+                </div>
+              </div>
+            </nav>
+          </div>
+        </div>
+      )}
+
       {/* Enhanced Hero Section with Parallax */}
       <section className="pt-24 pb-12 lg:pt-32 lg:pb-20 relative overflow-hidden">
         {/* Parallax Background Elements */}
@@ -769,149 +713,139 @@ export default function CRMLanding() {
         </ParallaxElement>
 
         <div className="container mx-auto px-4 lg:px-6 relative z-10">
-          <TimelineAnimation>
-            <div className="text-center max-w-4xl mx-auto">
-              {/* <ParallaxElement speed={0.1}>
-                <Badge className="mb-6 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-all duration-300 transform hover:scale-105 animate-morphBounce">
-                  🚀 Trusted by 10,000+ businesses worldwide
-                </Badge>
-              </ParallaxElement> */}
+          <div className="text-center max-w-4xl mx-auto">
+            {/* <ParallaxElement speed={0.1}>
+              <Badge className="mb-6 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-all duration-300 transform hover:scale-105 animate-morphBounce">
+                🚀 Trusted by 10,000+ businesses worldwide
+              </Badge>
+            </ParallaxElement> */}
 
-              <h1
-                className="text-4xl lg:text-6xl font-bold text-slate-900 mb-6 leading-tight"
-                style={{
-                  transform: `translateY(${scrollY * 0.1}px)`,
-                }}
-              >
-                Transform Leads Into
-                <ParallaxElement speed={0.05} className="inline-block">
-                  <span className="bg-gradient-to-r from-emerald-500 to-teal-600 bg-clip-text text-transparent relative">
-                    {" "}
-                    Loyal Customers
-                    <div className="absolute -top-2 -right-2">
-                      <Sparkles className="w-8 h-8 text-emerald-500 animate-pulse" />
-                    </div>
-                  </span>
-                </ParallaxElement>
-              </h1>
-
-              <ParallaxElement speed={0.15}>
-                <p className="text-xl text-slate-600 mb-8 max-w-2xl mx-auto leading-relaxed">
-                  Our intelligent CRM platform increases your conversion rates by up to 340% while reducing manual work
-                  by 75%. Stop losing potential customers and start growing your revenue.
-                </p>
+            <h1
+              className="text-4xl lg:text-6xl font-bold text-slate-900 mb-6 leading-tight"
+              style={{
+                transform: `translateY(${scrollY * 0.1}px)`,
+              }}
+            >
+              Transform Leads Into
+              <ParallaxElement speed={0.05} className="inline-block">
+                <span className="bg-gradient-to-r from-emerald-500 to-teal-600 bg-clip-text text-transparent relative">
+                  {" "}
+                  Loyal Customers
+                  <div className="absolute -top-2 -right-2">
+                    <Sparkles className="w-8 h-8 text-emerald-500 animate-pulse" />
+                  </div>
+                </span>
               </ParallaxElement>
+            </h1>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-                <VelocityElement>
-                  <Button
-                    size="lg"
-                    className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-8 py-4 text-lg shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105 group relative overflow-hidden"
-                  >
-                    <span className="relative z-10 flex items-center">
-                      Start Your Free Trial
-                      <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
-                    </span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-teal-600 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                  </Button>
-                </VelocityElement>
+            <ParallaxElement speed={0.15}>
+              <p className="text-xl text-slate-600 mb-8 max-w-2xl mx-auto leading-relaxed">
+                Our intelligent CRM platform increases your conversion rates by up to 340% while reducing manual work by
+                75%. Stop losing potential customers and start growing your revenue.
+              </p>
+            </ParallaxElement>
 
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+              <VelocityElement>
                 <Button
-                  variant="outline"
                   size="lg"
-                  className="px-8 py-4 text-lg border-2 border-slate-300 hover:border-emerald-500 hover:text-emerald-600 transition-all duration-300 group relative overflow-hidden"
+                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-8 py-4 text-lg shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105 group relative overflow-hidden"
                 >
-                  <Play className="mr-2 w-5 h-5 group-hover:scale-125 transition-transform duration-300" />
-                  <span className="relative z-10">Watch Demo</span>
-                  <div className="absolute inset-0 bg-emerald-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <span className="relative z-10 flex items-center">
+                    Start Your Free Trial
+                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
+                  </span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-teal-600 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </Button>
-              </div>
+              </VelocityElement>
 
-              <ParallaxElement speed={0.2}>
-                <div className="text-sm text-slate-500 flex items-center justify-center space-x-4">
-                  <span className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-emerald-500 mr-1" />
-                    No credit card required
-                  </span>
-                  <span className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-emerald-500 mr-1" />
-                    14-day free trial
-                  </span>
-                  <span className="flex items-center">
-                    <CheckCircle className="w-4 h-4 text-emerald-500 mr-1" />
-                    Cancel anytime
-                  </span>
-                </div>
-              </ParallaxElement>
+              <Button
+                variant="outline"
+                size="lg"
+                className="px-8 py-4 text-lg border-2 border-slate-300 hover:border-emerald-500 hover:text-emerald-600 transition-all duration-300 group relative overflow-hidden"
+              >
+                <Play className="mr-2 w-5 h-5 group-hover:scale-125 transition-transform duration-300" />
+                <span className="relative z-10">Watch Demo</span>
+                <div className="absolute inset-0 bg-emerald-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              </Button>
             </div>
-          </TimelineAnimation>
+
+            <ParallaxElement speed={0.2}>
+              <div className="text-sm text-slate-500 flex items-center justify-center space-x-4">
+                <span className="flex items-center">
+                  <CheckCircle className="w-4 h-4 text-emerald-500 mr-1" />
+                  No credit card required
+                </span>
+                <span className="flex items-center">
+                  <CheckCircle className="w-4 h-4 text-emerald-500 mr-1" />
+                  14-day free trial
+                </span>
+                <span className="flex items-center">
+                  <CheckCircle className="w-4 h-4 text-emerald-500 mr-1" />
+                  Cancel anytime
+                </span>
+              </div>
+            </ParallaxElement>
+          </div>
         </div>
       </section>
 
-      {/* Enhanced Stats Section with 3D Effects */}
+      {/* Enhanced Stats Section */}
       <section className="py-12 bg-gradient-to-r from-emerald-50 to-teal-50 relative overflow-hidden">
         <ParallaxElement speed={0.3} className="absolute inset-0">
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-emerald-100/30 to-teal-100/30" />
         </ParallaxElement>
 
         <div className="container mx-auto px-4 lg:px-6 relative z-10">
-          <TimelineAnimation delay={200}>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-              {[
-                { end: 340, suffix: "%", label: "Conversion Increase", icon: TrendingUp },
-                { end: 75, suffix: "%", label: "Time Saved", icon: Clock },
-                { end: 2, suffix: "M+", label: "Revenue Generated", prefix: "$", icon: BarChart3 },
-                { end: 98, suffix: "%", label: "Customer Satisfaction", icon: Heart },
-              ].map((stat, index) => (
-                <Scroll3DCard key={index} index={index}>
-                  <div className="text-center group hover:scale-110 transition-all duration-500 cursor-pointer bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
-                    <div className="relative mb-4">
-                      <div
-                        className="w-16 h-16 bg-white rounded-full shadow-lg flex items-center justify-center mx-auto group-hover:shadow-xl transition-shadow duration-300"
-                        style={{
-                          transform: `rotateY(${Math.sin(scrollY * 0.01 + index) * 10}deg)`,
-                        }}
-                      >
-                        <stat.icon className="w-8 h-8 text-emerald-600 group-hover:scale-125 transition-transform duration-300" />
-                      </div>
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <Sparkles className="w-3 h-3 text-white" />
-                      </div>
-                    </div>
-                    <div className="text-3xl lg:text-4xl font-bold text-emerald-600 mb-2">
-                      {stat.prefix}
-                      <AnimatedCounter end={stat.end} suffix={stat.suffix} />
-                    </div>
-                    <div className="text-slate-600 font-medium group-hover:text-emerald-700 transition-colors duration-300">
-                      {stat.label}
-                    </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              { end: 340, suffix: "%", label: "Conversion Increase", icon: TrendingUp },
+              { end: 75, suffix: "%", label: "Time Saved", icon: Clock },
+              { end: 2, suffix: "M+", label: "Revenue Generated", prefix: "$", icon: BarChart3 },
+              { end: 98, suffix: "%", label: "Customer Satisfaction", icon: Heart },
+            ].map((stat, index) => (
+              <div
+                key={index}
+                className="text-center group hover:scale-110 transition-all duration-500 cursor-pointer bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-lg"
+              >
+                <div className="relative mb-4">
+                  <div className="w-16 h-16 bg-white rounded-full shadow-lg flex items-center justify-center mx-auto group-hover:shadow-xl transition-shadow duration-300">
+                    <stat.icon className="w-8 h-8 text-emerald-600 group-hover:scale-125 transition-transform duration-300" />
                   </div>
-                </Scroll3DCard>
-              ))}
-            </div>
-          </TimelineAnimation>
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <Sparkles className="w-3 h-3 text-white" />
+                  </div>
+                </div>
+                <div className="text-3xl lg:text-4xl font-bold text-emerald-600 mb-2">
+                  {stat.prefix}
+                  <AnimatedCounter end={stat.end} suffix={stat.suffix} />
+                </div>
+                <div className="text-slate-600 font-medium group-hover:text-emerald-700 transition-colors duration-300">
+                  {stat.label}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Enhanced Features Section with Staggered Animations */}
+      {/* Enhanced Features Section */}
       <section id="features" className="py-20 relative">
         <div className="container mx-auto px-4 lg:px-6">
-          <TimelineAnimation>
-            <div className="text-center mb-16">
-              <h2 className="text-3xl lg:text-5xl font-bold text-slate-900 mb-6">
-                Everything You Need to
-                <ParallaxElement speed={0.05} className="inline-block">
-                  <span className="bg-gradient-to-r from-emerald-500 to-teal-600 bg-clip-text text-transparent">
-                    {" "}
-                    Convert More
-                  </span>
-                </ParallaxElement>
-              </h2>
-              <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-                Our comprehensive CRM platform combines smart automation with proven conversion strategies
-              </p>
-            </div>
-          </TimelineAnimation>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-5xl font-bold text-slate-900 mb-6">
+              Everything You Need to
+              <ParallaxElement speed={0.05} className="inline-block">
+                <span className="bg-gradient-to-r from-emerald-500 to-teal-600 bg-clip-text text-transparent">
+                  {" "}
+                  Convert More
+                </span>
+              </ParallaxElement>
+            </h2>
+            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+              Our comprehensive CRM platform combines smart automation with proven conversion strategies
+            </p>
+          </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
@@ -955,33 +889,29 @@ export default function CRMLanding() {
                 color: "from-purple-500 to-pink-600",
               },
             ].map((feature, index) => (
-              <TimelineAnimation key={index} delay={index * 100}>
-                <Card className="group hover:shadow-2xl transition-all duration-700 hover:-translate-y-4 border-0 shadow-lg relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-teal-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  <CardContent
-                    className="p-8 relative z-10"
-                    style={{
-                      transform: `perspective(1000px) rotateX(${Math.sin(scrollY * 0.005 + index) * 2}deg) rotateY(${Math.cos(scrollY * 0.005 + index) * 2}deg)`,
-                    }}
-                  >
-                    <div className="relative mb-6">
-                      <div
-                        className={`w-12 h-12 rounded-xl bg-gradient-to-r ${feature.color} flex items-center justify-center group-hover:scale-125 group-hover:rotate-12 transition-all duration-500 shadow-lg group-hover:shadow-xl`}
-                      >
-                        <feature.icon className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 animate-ping"></div>
+              <Card
+                key={index}
+                className="group hover:shadow-2xl transition-all duration-700 hover:-translate-y-4 border-0 shadow-lg relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-teal-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <CardContent className="p-8 relative z-10">
+                  <div className="relative mb-6">
+                    <div
+                      className={`w-12 h-12 rounded-xl bg-gradient-to-r ${feature.color} flex items-center justify-center group-hover:scale-125 group-hover:rotate-12 transition-all duration-500 shadow-lg group-hover:shadow-xl`}
+                    >
+                      <feature.icon className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-4 group-hover:text-emerald-600 transition-colors duration-300">
-                      {feature.title}
-                    </h3>
-                    <p className="text-slate-600 leading-relaxed group-hover:text-slate-700 transition-colors duration-300">
-                      {feature.description}
-                    </p>
-                    <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
-                  </CardContent>
-                </Card>
-              </TimelineAnimation>
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 animate-ping"></div>
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-4 group-hover:text-emerald-600 transition-colors duration-300">
+                    {feature.title}
+                  </h3>
+                  <p className="text-slate-600 leading-relaxed group-hover:text-slate-700 transition-colors duration-300">
+                    {feature.description}
+                  </p>
+                  <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
@@ -994,147 +924,117 @@ export default function CRMLanding() {
         </ParallaxElement>
 
         <div className="container mx-auto px-4 lg:px-6 relative z-10">
-          <TimelineAnimation>
-            <div className="text-center mb-16">
-              <h2 className="text-3xl lg:text-5xl font-bold text-slate-900 mb-6">
-                See ConvertCRM in Action
-                <VelocityElement>
-                  <span className="inline-block ml-2">
-                    <MessageCircle className="w-12 h-12 text-emerald-500 animate-bounce" />
-                  </span>
-                </VelocityElement>
-              </h2>
-              <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-                Watch how our intelligent chat system transforms customer interactions and boosts satisfaction
-              </p>
-            </div>
-          </TimelineAnimation>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-5xl font-bold text-slate-900 mb-6">
+              See ConvertCRM in Action
+              <VelocityElement>
+                <span className="inline-block ml-2">
+                  <MessageCircle className="w-12 h-12 text-emerald-500 animate-bounce" />
+                </span>
+              </VelocityElement>
+            </h2>
+            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+              Watch how our intelligent chat system transforms customer interactions and boosts satisfaction
+            </p>
+          </div>
 
           <InteractiveChatDemo />
         </div>
       </section>
 
-      {/* Enhanced Benefits Comparison with Morphing Effects */}
+      {/* Enhanced Benefits Comparison */}
       <section id="benefits" className="py-20 bg-gradient-to-br from-slate-50 to-emerald-50 relative overflow-hidden">
         <div className="container mx-auto px-4 lg:px-6">
-          <TimelineAnimation>
-            <div className="text-center mb-16">
-              <h2 className="text-3xl lg:text-5xl font-bold text-slate-900 mb-6">
-                See the Difference ConvertCRM Makes
-              </h2>
-              <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-                Compare your current results with what you could achieve using our platform
-              </p>
-            </div>
-          </TimelineAnimation>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-5xl font-bold text-slate-900 mb-6">See the Difference ConvertCRM Makes</h2>
+            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+              Compare your current results with what you could achieve using our platform
+            </p>
+          </div>
 
           <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
             {/* Without ConvertCRM */}
-            <TimelineAnimation delay={200}>
-              <Card className="border-2 border-red-200 shadow-lg relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-red-50 to-red-100 opacity-50"></div>
-                <CardContent className="p-8 relative z-10">
-                  <div className="text-center mb-8">
-                    <div
-                      className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300"
-                      style={{
-                        transform: `rotateY(${Math.sin(scrollY * 0.01) * 5}deg)`,
-                      }}
-                    >
-                      <X className="w-8 h-8 text-red-500" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-red-600 mb-2">Without ConvertCRM</h3>
-                    <p className="text-slate-600">Traditional sales approach</p>
+            <Card className="border-2 border-red-200 shadow-lg relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-br from-red-50 to-red-100 opacity-50"></div>
+              <CardContent className="p-8 relative z-10">
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <X className="w-8 h-8 text-red-500" />
                   </div>
+                  <h3 className="text-2xl font-bold text-red-600 mb-2">Without ConvertCRM</h3>
+                  <p className="text-slate-600">Traditional sales approach</p>
+                </div>
 
-                  <div className="space-y-4">
-                    {[
-                      { label: "Lead Conversion Rate", value: "2.3%" },
-                      { label: "Time Spent on Admin", value: "6 hours/day" },
-                      { label: "Follow-up Response Rate", value: "12%" },
-                      { label: "Monthly Revenue", value: "$50,000" },
-                      { label: "Customer Lifetime Value", value: "$2,400" },
-                    ].map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-4 bg-red-50 rounded-lg hover:bg-red-100 transition-all duration-300 transform hover:scale-105"
-                        style={{
-                          animationDelay: `${index * 100}ms`,
-                          transform: `translateX(${Math.sin(scrollY * 0.01 + index) * 2}px)`,
-                        }}
-                      >
-                        <span className="text-slate-700">{item.label}</span>
-                        <span className="font-bold text-red-600">{item.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TimelineAnimation>
+                <div className="space-y-4">
+                  {[
+                    { label: "Lead Conversion Rate", value: "2.3%" },
+                    { label: "Time Spent on Admin", value: "6 hours/day" },
+                    { label: "Follow-up Response Rate", value: "12%" },
+                    { label: "Monthly Revenue", value: "$50,000" },
+                    { label: "Customer Lifetime Value", value: "$2,400" },
+                  ].map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-4 bg-red-50 rounded-lg hover:bg-red-100 transition-all duration-300 transform hover:scale-105"
+                    >
+                      <span className="text-slate-700">{item.label}</span>
+                      <span className="font-bold text-red-600">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
             {/* With ConvertCRM */}
-            <TimelineAnimation delay={400}>
-              <Card className="border-2 border-emerald-200 shadow-xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 bg-gradient-to-l from-emerald-500 to-teal-600 text-white px-4 py-2 text-sm font-bold animate-pulse">
-                  RECOMMENDED
+            <Card className="border-2 border-emerald-200 shadow-xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 bg-gradient-to-l from-emerald-500 to-teal-600 text-white px-4 py-2 text-sm font-bold animate-pulse">
+                RECOMMENDED
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 to-teal-50 opacity-50"></div>
+              <CardContent className="p-8 relative z-10">
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <CheckCircle className="w-8 h-8 text-emerald-500" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-emerald-600 mb-2">With ConvertCRM</h3>
+                  <p className="text-slate-600">Smart sales optimization</p>
                 </div>
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 to-teal-50 opacity-50"></div>
-                <CardContent className="p-8 relative z-10">
-                  <div className="text-center mb-8">
-                    <div
-                      className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300"
-                      style={{
-                        transform: `rotateY(${Math.sin(scrollY * 0.01) * -5}deg)`,
-                      }}
-                    >
-                      <CheckCircle className="w-8 h-8 text-emerald-500" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-emerald-600 mb-2">With ConvertCRM</h3>
-                    <p className="text-slate-600">Smart sales optimization</p>
-                  </div>
 
-                  <div className="space-y-4">
-                    {[
-                      { label: "Lead Conversion Rate", value: "10.1%", improvement: "+340%" },
-                      { label: "Time Spent on Admin", value: "1.5 hours/day", improvement: "-75%" },
-                      { label: "Follow-up Response Rate", value: "38%", improvement: "+217%" },
-                      { label: "Monthly Revenue", value: "$175,000", improvement: "+250%" },
-                      { label: "Customer Lifetime Value", value: "$7,200", improvement: "+200%" },
-                    ].map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-4 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-all duration-300 group/item transform hover:scale-105"
-                        style={{
-                          animationDelay: `${index * 100}ms`,
-                          transform: `translateX(${Math.sin(scrollY * 0.01 + index) * -2}px)`,
-                        }}
-                      >
-                        <span className="text-slate-700">{item.label}</span>
-                        <div className="flex items-center">
-                          <span className="font-bold text-emerald-600">{item.value}</span>
-                          <Badge className="ml-2 bg-emerald-100 text-emerald-700 group-hover/item:scale-110 transition-transform duration-300">
-                            {item.improvement}
-                          </Badge>
-                        </div>
+                <div className="space-y-4">
+                  {[
+                    { label: "Lead Conversion Rate", value: "10.1%", improvement: "+340%" },
+                    { label: "Time Spent on Admin", value: "1.5 hours/day", improvement: "-75%" },
+                    { label: "Follow-up Response Rate", value: "38%", improvement: "+217%" },
+                    { label: "Monthly Revenue", value: "$175,000", improvement: "+250%" },
+                    { label: "Customer Lifetime Value", value: "$7,200", improvement: "+200%" },
+                  ].map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-4 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-all duration-300 group/item transform hover:scale-105"
+                    >
+                      <span className="text-slate-700">{item.label}</span>
+                      <div className="flex items-center">
+                        <span className="font-bold text-emerald-600">{item.value}</span>
+                        <Badge className="ml-2 bg-emerald-100 text-emerald-700 group-hover/item:scale-110 transition-transform duration-300">
+                          {item.improvement}
+                        </Badge>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TimelineAnimation>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
-          <TimelineAnimation delay={600}>
-            <div className="text-center mt-12">
-              <VelocityElement>
-                <div className="inline-flex items-center bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-full text-lg font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 group cursor-pointer">
-                  <TrendingUp className="mr-3 w-6 h-6 group-hover:scale-125 transition-transform duration-300" />
-                  <span>Potential Additional Revenue: $1,500,000/year</span>
-                  <Sparkles className="ml-3 w-6 h-6 animate-pulse" />
-                </div>
-              </VelocityElement>
-            </div>
-          </TimelineAnimation>
+          <div className="text-center mt-12">
+            <VelocityElement>
+              <div className="inline-flex items-center bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-full text-lg font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 group cursor-pointer">
+                <TrendingUp className="mr-3 w-6 h-6 group-hover:scale-125 transition-transform duration-300" />
+                <span>Potential Additional Revenue: $1,500,000/year</span>
+                <Sparkles className="ml-3 w-6 h-6 animate-pulse" />
+              </div>
+            </VelocityElement>
+          </div>
         </div>
       </section>
 
@@ -1147,43 +1047,41 @@ export default function CRMLanding() {
         </ParallaxElement>
 
         <div className="container mx-auto px-4 lg:px-6 text-center relative z-10">
-          <TimelineAnimation>
-            <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">Ready to 3x Your Conversion Rate?</h2>
-            <p className="text-xl text-emerald-100 mb-8 max-w-2xl mx-auto">
-              Join thousands of businesses already using ConvertCRM to transform their sales results. Start your free
-              trial today - no credit card required.
-            </p>
+          <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">Ready to 3x Your Conversion Rate?</h2>
+          <p className="text-xl text-emerald-100 mb-8 max-w-2xl mx-auto">
+            Join thousands of businesses already using ConvertCRM to transform their sales results. Start your free
+            trial today - no credit card required.
+          </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-              <VelocityElement>
-                <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-lg p-1 max-w-md w-full group hover:bg-white/30 transition-colors duration-300">
-                  <Input
-                    type="email"
-                    placeholder="Enter your business email"
-                    className="border-0 bg-transparent text-white placeholder:text-emerald-100 focus:ring-0"
-                  />
-                  <Button className="bg-white text-emerald-600 hover:bg-emerald-50 font-bold px-6 ml-2 transform hover:scale-105 transition-all duration-300">
-                    Start Free Trial
-                  </Button>
-                </div>
-              </VelocityElement>
-            </div>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+            <VelocityElement>
+              <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-lg p-1 max-w-md w-full group hover:bg-white/30 transition-colors duration-300">
+                <Input
+                  type="email"
+                  placeholder="Enter your business email"
+                  className="border-0 bg-transparent text-white placeholder:text-emerald-100 focus:ring-0"
+                />
+                <Button className="bg-white text-emerald-600 hover:bg-emerald-50 font-bold px-6 ml-2 transform hover:scale-105 transition-all duration-300">
+                  Start Free Trial
+                </Button>
+              </div>
+            </VelocityElement>
+          </div>
 
-            <div className="text-emerald-100 text-sm flex items-center justify-center space-x-4">
-              <span className="flex items-center">
-                <CheckCircle className="w-4 h-4 mr-1" />
-                14-day free trial
-              </span>
-              <span className="flex items-center">
-                <CheckCircle className="w-4 h-4 mr-1" />
-                No setup fees
-              </span>
-              <span className="flex items-center">
-                <CheckCircle className="w-4 h-4 mr-1" />
-                Cancel anytime
-              </span>
-            </div>
-          </TimelineAnimation>
+          <div className="text-emerald-100 text-sm flex items-center justify-center space-x-4">
+            <span className="flex items-center">
+              <CheckCircle className="w-4 h-4 mr-1" />
+              14-day free trial
+            </span>
+            <span className="flex items-center">
+              <CheckCircle className="w-4 h-4 mr-1" />
+              No setup fees
+            </span>
+            <span className="flex items-center">
+              <CheckCircle className="w-4 h-4 mr-1" />
+              Cancel anytime
+            </span>
+          </div>
         </div>
       </section>
 
@@ -1194,29 +1092,27 @@ export default function CRMLanding() {
         </ParallaxElement>
 
         <div className="container mx-auto px-4 lg:px-6 relative z-10">
-          <TimelineAnimation>
-            <div className="text-center">
-              <VelocityElement>
-                <div className="group cursor-pointer inline-block">
-                  <div className="flex items-center justify-center space-x-4 mb-6 group-hover:scale-110 transition-all duration-500">
-                    <div className="w-16 h-16 bg-gradient-to-r from-emerald-500/20 to-teal-600/20 backdrop-blur-sm rounded-2xl flex items-center justify-center group-hover:bg-gradient-to-r group-hover:from-emerald-500/40 group-hover:to-teal-600/40 transition-all duration-500 border border-emerald-500/20 group-hover:border-emerald-500/40">
-                      <BarChart3 className="w-8 h-8 text-emerald-400 group-hover:text-emerald-300 transition-colors duration-300" />
-                    </div>
-                    <span className="text-4xl font-bold text-emerald-400/60 group-hover:text-emerald-300 transition-all duration-300">
-                      ConvertCRM
-                    </span>
+          <div className="text-center">
+            <VelocityElement>
+              <div className="group cursor-pointer inline-block">
+                <div className="flex items-center justify-center space-x-4 mb-6 group-hover:scale-110 transition-all duration-500">
+                  <div className="w-16 h-16 bg-gradient-to-r from-emerald-500/20 to-teal-600/20 backdrop-blur-sm rounded-2xl flex items-center justify-center group-hover:bg-gradient-to-r group-hover:from-emerald-500/40 group-hover:to-teal-600/40 transition-all duration-500 border border-emerald-500/20 group-hover:border-emerald-500/40">
+                    <BarChart3 className="w-8 h-8 text-emerald-400 group-hover:text-emerald-300 transition-colors duration-300" />
                   </div>
-                  <p className="text-slate-500 max-w-md mx-auto opacity-60 group-hover:opacity-80 transition-opacity duration-300">
-                    Transform your sales process with intelligent automation that actually converts.
-                  </p>
+                  <span className="text-4xl font-bold text-emerald-400/60 group-hover:text-emerald-300 transition-all duration-300">
+                    ConvertCRM
+                  </span>
                 </div>
-              </VelocityElement>
-            </div>
+                <p className="text-slate-500 max-w-md mx-auto opacity-60 group-hover:opacity-80 transition-opacity duration-300">
+                  Transform your sales process with intelligent automation that actually converts.
+                </p>
+              </div>
+            </VelocityElement>
+          </div>
 
-            <div className="border-t border-slate-800 mt-12 pt-8 text-center text-slate-400">
-              <p>&copy; {new Date().getFullYear()} ConvertCRM. All rights reserved.</p>
-            </div>
-          </TimelineAnimation>
+          <div className="border-t border-slate-800 mt-12 pt-8 text-center text-slate-400">
+            <p>&copy; {new Date().getFullYear()} ConvertCRM. All rights reserved.</p>
+          </div>
         </div>
       </footer>
 
