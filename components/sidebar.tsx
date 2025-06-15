@@ -2,7 +2,7 @@
 import {motion} from "motion/react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils"
-import { Pill, UserCheck2, LucideContact2, Pen, Tag, Settings,ChevronDown,ChevronRight,Bell,ChevronsUpDownIcon, LucideGroup, PencilIcon, NotebookPenIcon, Building2, User2Icon, LockIcon, UserCircle2, ArrowLeftToLine, Navigation, NavigationIcon, SquareArrowOutUpLeft } from "lucide-react";
+import { Pill, UserCheck2, LucideContact2, Pen, Tag, Settings,ChevronDown,ChevronRight,Bell,ChevronsUpDownIcon, LucideGroup, PencilIcon, NotebookPenIcon, Building2, User2Icon, LockIcon, UserCircle2, ArrowLeftToLine, Navigation, NavigationIcon, SquareArrowOutUpLeft, BarChart } from "lucide-react";
 import { DropdownMenu,DropdownMenuTrigger,DropdownMenuContent,DropdownMenuItem } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -120,14 +120,14 @@ function SidebarIn() {
         <div className="flex items-center p-4 h-16 bg-transparent justify-between">
           <div className="flex items-center gap-3 overflow-hidden">
             <div className="flex-shrink-0 bg-emerald-700 p-2 rounded-full">
-              <LucideGroup className="h-4 w-4 text-white" />
+              <BarChart className="h-4 w-4 text-white" />
             </div>
             <motion.span
               className="font-bold text-xl whitespace-nowrap text-emerald-700"
               animate={{ opacity: expanded || locked ? 1 : 0 }}
               transition={{ duration: 0.1 }}
             >
-              CRM First
+              ConvertCRM
             </motion.span>
 
           </div>
