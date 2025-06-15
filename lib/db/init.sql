@@ -22,6 +22,7 @@ CREATE TABLE Users (
     password_hash NVARCHAR(MAX) NOT NULL,
     role VARCHAR(50) CHECK (role IN ('admin', 'manager', 'user', 'guest')) DEFAULT 'user',
     tenant_id UNIQUEIDENTIFIER NOT NULL,
+    is_active BIT NOT NULL DEFAULT 1
     created_at DATETIME2 DEFAULT GETDATE(),
     updated_at DATETIME2 DEFAULT GETDATE(),
     
