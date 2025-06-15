@@ -30,6 +30,7 @@ import {
   ArrowUp,
 } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 // Advanced Scroll Animation Hook
 function useScrollAnimation() {
@@ -553,7 +554,7 @@ function InteractiveChatDemo() {
 export default function CRMLanding() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { scrollY, scrollVelocity } = useScrollAnimation()
-
+  const router = useRouter();
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white overflow-hidden">
       {/* Scroll Progress Bar */}
@@ -649,6 +650,7 @@ export default function CRMLanding() {
             <Button
               variant="ghost"
               className="text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 transition-all duration-300"
+              onClick={()=>router.push('/login')}
             >
               Sign In
             </Button>
