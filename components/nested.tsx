@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
-import { CrossIcon, Loader2, X } from "lucide-react";
+import { CrossIcon, Loader2, X,Check } from "lucide-react";
 import { Badge } from "./ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+
 export default function NestedTable({did}:any){
   const [data,setdata] = useState<string[]>([]);
   const [loading,setloading] = useState(false);
@@ -18,6 +24,55 @@ export default function NestedTable({did}:any){
     )
    
   }
+  function RowTable({item,index}:any){
+  const [activehover,setactivehover] = useState<boolean>(false);
+  return(
+    <tr key={index}      onMouseMove={()=>setactivehover(true)}
+        onMouseLeave={()=>setactivehover(false)}>
+            <td className="px-4 py-2 border flex flex-row">
+              {item.id}
+            <div className={`absolute left-10  overflow-hidden transition-all  duration-150 ${activehover ? 'w-40  pr-8 ' : 'w-0'} `} style={{background:"linear-gradient(90deg, rgb(251, 251, 251) 80%, rgba(245, 245, 245, 0.7) 100%)"}}>
+                <div className="flex flex-row gap-2 h-fit">
+                  <Tooltip>
+                  <TooltipTrigger>
+                <button className="cursor-pointer hover:text-emerald-500"><Check/></button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Add to library</p>
+                  </TooltipContent>
+                </Tooltip>
+                  <Tooltip>
+                  <TooltipTrigger>
+                <button className="cursor-pointer hover:text-emerald-500"><Check/></button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Add to library</p>
+                  </TooltipContent>
+                </Tooltip>
+                  <Tooltip>
+                  <TooltipTrigger>
+                <button className="cursor-pointer hover:text-emerald-500"><Check/></button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Add to library</p>
+                  </TooltipContent>
+                </Tooltip>
+                  
+                </div>
+                
+                </div>
+              
+            </td>
+            <td className="px-4 py-2 border">{statusbadges(item.status)}</td>
+            <td className="px-4 py-2 border">{item.subject}</td>
+            <td className="px-4 py-2 border">{item.body}</td>
+            <td className="px-4 py-2 border">{item.due_date}</td>
+            <td className="px-4 py-2 border">{item.assigned_user_id}</td>
+            <td className="px-4 py-2 border">{item.created_by}</td>
+      
+          </tr>
+  )
+}
   useEffect(() => {
           const fetchData = async () => {
             
@@ -57,8 +112,11 @@ export default function NestedTable({did}:any){
             return(
               <>
             {/* <div className="absolute left-0 border">a</div> */}
-          <tr key={index}>
-            <td className="px-4 py-2 border">{item.id}</td>
+          {/* <tr key={index}>
+            <td className="px-4 py-2 border">{item.id}
+
+              
+            </td>
             <td className="px-4 py-2 border">{statusbadges(item.status)}</td>
             <td className="px-4 py-2 border">{item.subject}</td>
             <td className="px-4 py-2 border">{item.body}</td>
@@ -66,7 +124,8 @@ export default function NestedTable({did}:any){
             <td className="px-4 py-2 border">{item.assigned_user_id}</td>
             <td className="px-4 py-2 border">{item.created_by}</td>
       
-          </tr>
+          </tr> */}
+          <RowTable key={index} item={item} index={index}/>
           </>
             );
           }):(
@@ -81,7 +140,7 @@ export default function NestedTable({did}:any){
     }
     else{
       return(
-        <div className="flex flex-row items-center gap-2 justify-center h-28">
+        <div className="flex flex-row items-center gap-2 justify-start h-28">
                         <Loader2 className="animate-spin h-5 w-5" />
                         <span className="text-gray-500">Tasks loading...</span>
                       </div>

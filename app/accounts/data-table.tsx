@@ -55,7 +55,7 @@ import {
 } from "@/components/ui/table"
 import { useEffect, useState,Suspense } from "react"
 import { Button } from "@/components/ui/button" // For pagination buttons
-import { BoxSelect, ChevronDown, ChevronLeft, ChevronRight, Columns3,FilterIcon,Plus,PlusCircleIcon,X } from "lucide-react" // Optional icons
+import { BoxSelect, Check, ChevronDown, ChevronLeft, ChevronRight, Columns3,FilterIcon,Plus,PlusCircleIcon,X } from "lucide-react" // Optional icons
 import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import NestedTable from "@/components/nested"
@@ -271,7 +271,7 @@ const getColumnVisibilityFromLocalStorage = (): VisibilityState => {
   function CustomTableRow({ row, child, depth }: { row: any, child?: boolean, depth?: number }) {
     const [isOpen, setIsOpen] = useState(false)
     const [data,setdata] = useState('no')
-    const [activehover,setactivehover] = useState(true)
+    const [activehover,setactivehover] = useState(false)
      const visibleCells = row.getVisibleCells();
     const colSpan = visibleCells.length;
     let depthin = depth||0;
@@ -282,9 +282,10 @@ const getColumnVisibilityFromLocalStorage = (): VisibilityState => {
         key={row.id}
         data-state={row.getIsSelected() && "selected"}
         className="border"
-        
+   
 
       >
+        
         {row.getVisibleCells().map((cell:any, idx:number) => (
           <TableCell key={cell.id} className="justify-center items-center">
               <div className={`flex items-center justify-center gap-1`} style={{ marginLeft: child && idx === 0 ? `${depthin * 12}px` : 0 }}>
@@ -295,12 +296,13 @@ const getColumnVisibilityFromLocalStorage = (): VisibilityState => {
                     setselect(checked ? [...select, cell.getValue() as string] : select.filter(s => s !== cell.getValue()))
                   }}
                 />}
-              {idx==0?<button className="cursor-pointer" onClick={()=>setIsOpen(!isOpen)}>{isOpen?<ChevronDown className="w-4 h-4"/>:<ChevronRight className="w-4 h-4"></ChevronRight>}</button>:""}
+              {idx==0?<><button className="cursor-pointer" onClick={()=>setIsOpen(!isOpen)}>{isOpen?<ChevronDown className="w-4 h-4"/>:<ChevronRight className="w-4 h-4"></ChevronRight>}</button></>:""}
 
               {cell.column.id === 'status_type' 
                 ? statusbadges(cell.getValue() as string)
                 : flexRender(cell.column.columnDef.cell, cell.getContext())}
-              
+
+
               </div>
           </TableCell>
         ))}
