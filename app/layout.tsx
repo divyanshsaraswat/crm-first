@@ -22,7 +22,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CRM App",
+  title: "ConvertCRM",
   description: "Customer Relation Management App",
 };
 
