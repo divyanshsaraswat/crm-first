@@ -31,7 +31,7 @@ export default function NestedTable({did}:any){
         onMouseLeave={()=>setactivehover(false)}>
             <td className="px-4 py-2 border flex flex-row">
               {item.id}
-            <div className={`absolute left-10  overflow-hidden transition-all  duration-150 ${activehover ? 'w-40  pr-8 ' : 'w-0'} `} style={{background:"linear-gradient(90deg, rgb(251, 251, 251) 80%, rgba(245, 245, 245, 0.7) 100%)"}}>
+            <div className={`absolute left-10  overflow-hidden transition-all  duration-150 ${activehover ? 'w-40  pr-8 ' : 'w-0'} `} style={{background:"linear-gradient(90deg, rgb(251, 251, 251,1) 80%, rgba(245, 245, 245, 0) 100%)"}}>
                 <div className="flex flex-row gap-2 h-fit">
                   <Tooltip>
                   <TooltipTrigger>

@@ -45,7 +45,13 @@ CREATE TABLE Users (
 --     ftype nvarchar(20) NOT NULL,
 -- );
 -- GO
-
+-- INSERT INTO FOLLOWUPMASTER (ftype) 
+-- VALUES 
+--     ('Visit'),
+--     ('Email'),
+--     ('WhatsApp'),
+--     ('Call');
+-- GO
 -- CREATE TABLE SOURCEMASTER(
 --     id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
 --     srctype nvarchar(30) NOT NULL,

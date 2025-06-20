@@ -13,6 +13,11 @@ import {
 import { Addfield, CrmAccountsModal, CrmContactModal, CrmTaskModal, CrmUsersEditModal } from "@/components/forms"
 import { CrmAccountsEditModal } from "@/components/forms"
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -296,7 +301,7 @@ const getColumnVisibilityFromLocalStorage = (): VisibilityState => {
                     setselect(checked ? [...select, cell.getValue() as string] : select.filter(s => s !== cell.getValue()))
                   }}
                 />}
-              {idx==0?<><button className="cursor-pointer" onClick={()=>setIsOpen(!isOpen)}>{isOpen?<ChevronDown className="w-4 h-4"/>:<ChevronRight className="w-4 h-4"></ChevronRight>}</button></>:""}
+              {idx==0?<Tooltip><TooltipTrigger><button className="cursor-pointer" onClick={()=>setIsOpen(!isOpen)}>{isOpen?<ChevronDown className="w-4 h-4"/>:<ChevronRight className="w-4 h-4"></ChevronRight>}</button></TooltipTrigger><TooltipContent>Open Tasks</TooltipContent></Tooltip>:""}
 
               {cell.column.id === 'status_type' 
                 ? statusbadges(cell.getValue() as string)
