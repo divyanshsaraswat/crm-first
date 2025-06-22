@@ -111,6 +111,13 @@ const formUsersSchema = z.object({
     required_error: "Please select a role.",
   })
 });
+const followUpSchema = z.object({
+  id:z.string(),
+  fid:z.string(),
+  ftype: z.string().min(1, 'Follow-up type is required'),
+  message: z.string().optional(),
+});
+type FollowUpFormData = z.infer<typeof followUpSchema>;
 const formUsersEditSchema = z.object({
   username: z.string().min(3, {
     message: "Username must be at least 3 characters.",
@@ -753,6 +760,8 @@ export function CrmAccountsEditModal({data}:any) {
   const [show,setShow] = useState(true)
   const [showroles,setshowroles] = useState([])
   const [loading,setloading] = useState<boolean>(false);
+  const [pcountryCode, setpCountryCode] = useState('+91');
+  const [wcountryCode, setwCountryCode] = useState('+91');
 
   const form = useForm<z.infer<typeof formAccountsSchema>>({
     resolver: zodResolver(formAccountsSchema),
@@ -775,7 +784,7 @@ export function CrmAccountsEditModal({data}:any) {
       email: data[0]?.original.email,
       designation_name: data[0]?.original.designation_name,
       BusinessNature: data[0]?.original.BusinessNature,
-      JoiningDate: new Date(),
+      JoiningDate: new Date(data[0]?.original.JoiningDate),
       SourceID: data[0]?.original.SourceID,
       DesignationID: data[0]?.original.DesignationID, 
       StatusID: data[0]?.original.StatusID
@@ -802,7 +811,7 @@ export function CrmAccountsEditModal({data}:any) {
           "Content-Type": "application/json",
           Cookie: token
         },
-        body: JSON.stringify(values)
+        body: JSON.stringify({...values,"JoiningDate":values.JoiningDate?.toLocaleDateString()})
       })
       
       if (!result.ok) {
@@ -842,10 +851,12 @@ export function CrmAccountsEditModal({data}:any) {
       
       const roles = await result.json()
       console.log(roles);
+      console.log("Actual Data",data[0]?.original)
       setshowroles(roles.message[0])
 
     }
     fetchData();
+    
    
   },[])
   return (
@@ -883,15 +894,97 @@ export function CrmAccountsEditModal({data}:any) {
           <FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem>
         )} />
 
-        <FormField name="phone" control={form.control} render={({ field }) => (
-          <FormItem><FormLabel>Phone</FormLabel>
-          <FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
+        <FormField
+  name="phone"
+  control={form.control}
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Phone</FormLabel>
+      <FormControl>
+        <div className="flex space-x-2">
+          {/* Country Code Select */}
+          <Select
+            defaultValue="+91"
+            onValueChange={(value) => setpCountryCode(value)}
+          >
+            <SelectTrigger className="w-[80px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+            <SelectItem value="+91" className="hover:bg-gray-200 cursor-pointer">+91</SelectItem>
+            <SelectItem value="+1" className="hover:bg-gray-200 cursor-pointer">+1</SelectItem>
+            <SelectItem value="+86" className="hover:bg-gray-200 cursor-pointer">+86</SelectItem>
+            <SelectItem value="+971" className="hover:bg-gray-200 cursor-pointer">+971</SelectItem>
+            <SelectItem value="+966" className="hover:bg-gray-200 cursor-pointer">+966</SelectItem>
+            <SelectItem value="+7" className="hover:bg-gray-200 cursor-pointer">+7</SelectItem>
+            <SelectItem value="+65" className="hover:bg-gray-200 cursor-pointer">+65</SelectItem>
+            <SelectItem value="+49" className="hover:bg-gray-200 cursor-pointer">+49</SelectItem>
+            <SelectItem value="+62" className="hover:bg-gray-200 cursor-pointer">+62</SelectItem>
+            <SelectItem value="+44" className="hover:bg-gray-200 cursor-pointer">+44</SelectItem>
+            <SelectItem value="+880" className="hover:bg-gray-200 cursor-pointer">+880</SelectItem>
+              {/* Add more as needed */}
+            </SelectContent>
+          </Select>
 
-        <FormField name="waphone" control={form.control} render={({ field }) => (
-          <FormItem><FormLabel>Whatsapp Phone</FormLabel>
-          <FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
+          {/* Phone Input */}
+          <Input
+            {...field}
+            value={field.value?.replace(/^\+\d+\s*/, '')} // show only number
+            onChange={(e) => field.onChange(`${pcountryCode} ${e.target.value}`)}
+            placeholder="Enter phone number"
+          />
+        </div>
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
+        <FormField
+  name="waphone"
+  control={form.control}
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>WhatsApp Phone</FormLabel>
+      <FormControl>
+        <div className="flex space-x-2">
+          {/* Country Code Selector */}
+          <Select
+            defaultValue={wcountryCode}
+            onValueChange={(value) => setwCountryCode(value)}
+          >
+            <SelectTrigger className="w-[80px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="+91" className="hover:bg-gray-200 cursor-pointer">+91</SelectItem>
+              <SelectItem value="+1" className="hover:bg-gray-200 cursor-pointer">+1</SelectItem>
+              <SelectItem value="+86" className="hover:bg-gray-200 cursor-pointer">+86</SelectItem>
+              <SelectItem value="+971" className="hover:bg-gray-200 cursor-pointer">+971</SelectItem>
+              <SelectItem value="+966" className="hover:bg-gray-200 cursor-pointer">+966</SelectItem>
+              <SelectItem value="+7" className="hover:bg-gray-200 cursor-pointer">+7</SelectItem>
+              <SelectItem value="+65" className="hover:bg-gray-200 cursor-pointer">+65</SelectItem>
+              <SelectItem value="+49" className="hover:bg-gray-200 cursor-pointer">+49</SelectItem>
+              <SelectItem value="+62" className="hover:bg-gray-200 cursor-pointer">+62</SelectItem>
+              <SelectItem value="+44" className="hover:bg-gray-200 cursor-pointer">+44</SelectItem>
+              <SelectItem value="+880" className="hover:bg-gray-200 cursor-pointer">+880</SelectItem>
+              {/* Add more options as needed */}
+            </SelectContent>
+          </Select>
+
+          {/* WhatsApp Number Input */}
+          <Input
+            {...field}
+            value={field.value?.replace(/^\+\d+\s*/, '')} // Strip existing country code for input
+            onChange={(e) => field.onChange(`${wcountryCode} ${e.target.value}`)} // Prepend selected code
+            placeholder="Enter WhatsApp number"
+          />
+        </div>
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
 
         <FormField name="BusinessNature" control={form.control} render={({ field }) => (
           <FormItem><FormLabel>Business Nature</FormLabel>
@@ -1090,7 +1183,7 @@ export function CrmTaskModal({ data }: any) {
           "Content-Type": "application/json",
           Cookie: token
         },
-        body: JSON.stringify(values)
+        body: JSON.stringify({...values,"due_date":values.due_date?.toLocaleDateString()})
       });
 
       if (!result.ok) {
@@ -1292,7 +1385,7 @@ export function CrmTaskEditModal({ data,updateparent }: any) {
           "Content-Type": "application/json",
           Cookie: token
         },
-        body: JSON.stringify(values)
+        body: JSON.stringify({...values,"due_date":values.due_date?.toLocaleDateString()})
       });
 
       if (!result.ok) {
@@ -1700,6 +1793,9 @@ export function CrmAccountsModal() {
   const [show,setShow] = useState(true)
   const [showroles,setshowroles] = useState([])
   const [loading,setloading] = useState<boolean>(false);
+  const [pcountryCode, setpCountryCode] = useState('+91');
+  const [wcountryCode, setwCountryCode] = useState('+91');
+
 
   const form = useForm<z.infer<typeof formAccountsSchema>>({
     resolver: zodResolver(formAccountsSchema),
@@ -1749,7 +1845,7 @@ export function CrmAccountsModal() {
           "Content-Type": "application/json",
           Cookie: token
         },
-        body: JSON.stringify(values)
+        body: JSON.stringify({...values,"JoiningDate":values.JoiningDate?.toLocaleDateString()})
       })
       
       if (!result.ok) {
@@ -1828,15 +1924,97 @@ export function CrmAccountsModal() {
           <FormControl><FloatingLabelInput label="Email" type="email" {...field} /></FormControl><FormMessage /></FormItem>
         )} />
 
-        <FormField name="phone" control={form.control} render={({ field }) => (
-          <FormItem>
-          <FormControl><FloatingLabelInput label="Phone" {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
+        <FormField
+  name="phone"
+  control={form.control}
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Phone</FormLabel>
+      <FormControl>
+        <div className="flex space-x-2">
+          {/* Country Code Select */}
+          <Select
+            defaultValue="+91"
+            onValueChange={(value) => setpCountryCode(value)}
+          >
+            <SelectTrigger className="w-[80px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+            <SelectItem value="+91" className="hover:bg-gray-200 cursor-pointer">+91</SelectItem>
+            <SelectItem value="+1" className="hover:bg-gray-200 cursor-pointer">+1</SelectItem>
+            <SelectItem value="+86" className="hover:bg-gray-200 cursor-pointer">+86</SelectItem>
+            <SelectItem value="+971" className="hover:bg-gray-200 cursor-pointer">+971</SelectItem>
+            <SelectItem value="+966" className="hover:bg-gray-200 cursor-pointer">+966</SelectItem>
+            <SelectItem value="+7" className="hover:bg-gray-200 cursor-pointer">+7</SelectItem>
+            <SelectItem value="+65" className="hover:bg-gray-200 cursor-pointer">+65</SelectItem>
+            <SelectItem value="+49" className="hover:bg-gray-200 cursor-pointer">+49</SelectItem>
+            <SelectItem value="+62" className="hover:bg-gray-200 cursor-pointer">+62</SelectItem>
+            <SelectItem value="+44" className="hover:bg-gray-200 cursor-pointer">+44</SelectItem>
+            <SelectItem value="+880" className="hover:bg-gray-200 cursor-pointer">+880</SelectItem>
+              {/* Add more as needed */}
+            </SelectContent>
+          </Select>
 
-        <FormField name="waphone" control={form.control} render={({ field }) => (
-          <FormItem>
-          <FormControl><FloatingLabelInput label="WhatsApp Phone" {...field} /></FormControl><FormMessage /></FormItem>
-        )} />
+          {/* Phone Input */}
+          <Input
+            {...field}
+            value={field.value?.replace(/^\+\d+\s*/, '')} // show only number
+            onChange={(e) => field.onChange(`${pcountryCode} ${e.target.value}`)}
+            placeholder="Enter phone number"
+          />
+        </div>
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
+        <FormField
+  name="waphone"
+  control={form.control}
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>WhatsApp Phone</FormLabel>
+      <FormControl>
+        <div className="flex space-x-2">
+          {/* Country Code Selector */}
+          <Select
+            defaultValue={wcountryCode}
+            onValueChange={(value) => setwCountryCode(value)}
+          >
+            <SelectTrigger className="w-[80px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="+91" className="hover:bg-gray-200 cursor-pointer">+91</SelectItem>
+              <SelectItem value="+1" className="hover:bg-gray-200 cursor-pointer">+1</SelectItem>
+              <SelectItem value="+86" className="hover:bg-gray-200 cursor-pointer">+86</SelectItem>
+              <SelectItem value="+971" className="hover:bg-gray-200 cursor-pointer">+971</SelectItem>
+              <SelectItem value="+966" className="hover:bg-gray-200 cursor-pointer">+966</SelectItem>
+              <SelectItem value="+7" className="hover:bg-gray-200 cursor-pointer">+7</SelectItem>
+              <SelectItem value="+65" className="hover:bg-gray-200 cursor-pointer">+65</SelectItem>
+              <SelectItem value="+49" className="hover:bg-gray-200 cursor-pointer">+49</SelectItem>
+              <SelectItem value="+62" className="hover:bg-gray-200 cursor-pointer">+62</SelectItem>
+              <SelectItem value="+44" className="hover:bg-gray-200 cursor-pointer">+44</SelectItem>
+              <SelectItem value="+880" className="hover:bg-gray-200 cursor-pointer">+880</SelectItem>
+              {/* Add more options as needed */}
+            </SelectContent>
+          </Select>
+
+          {/* WhatsApp Number Input */}
+          <Input
+            {...field}
+            value={field.value?.replace(/^\+\d+\s*/, '')} // Strip existing country code for input
+            onChange={(e) => field.onChange(`${wcountryCode} ${e.target.value}`)} // Prepend selected code
+            placeholder="Enter WhatsApp number"
+          />
+        </div>
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
 
         <FormField name="BusinessNature" control={form.control} render={({ field }) => (
           <FormItem>
@@ -1998,4 +2176,140 @@ render={({ field }) => (
       </DialogContent>
     </Dialog>
   )
+}
+
+export function CrmFollowUpModal(data:any) {
+  const [open, setOpen] = useState(false);
+  const [followUpOptions, setfollowUpOptions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const form = useForm<FollowUpFormData>({
+    resolver: zodResolver(followUpSchema),
+    defaultValues: {
+      id:data?.id,
+      fid:"",
+      ftype: "",
+      message: "",
+    },
+  });
+
+  const onSubmit = async (data: FollowUpFormData) => {
+    console.log("Submitted:", data);
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/followup/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!res.ok) throw new Error("Failed to submit follow-up");
+
+      toast("✅ Follow-up submitted successfully.");
+      setOpen(false);
+      form.reset();
+    } catch (error) {
+      toast.error("❌ Failed to submit follow-up.");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+              
+              const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
+              const res = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/followup`,{
+                credentials:'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Cookie': token
+                }
+              }).then(async(res)=>{
+                const result = await res.json()
+                setfollowUpOptions(result?.message)
+                
+            }).catch((e)=>{console.error(e)})
+            }
+
+            setOpen(true);
+            fetchData()
+  }, []);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      
+      <DialogContent className="sm:max-w-[500px] md:max-w-[600px] max-h-[90vh] flex flex-col p-0 overflow-y-scroll">
+        <DialogHeader className="px-6 pt-6 pb-2">
+          <DialogTitle className="text-xl">Add Follow-Up</DialogTitle>
+          <DialogDescription>
+            Log a new follow-up activity for your CRM record.
+          </DialogDescription>
+        </DialogHeader>
+        <Separator />
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
+            <ScrollArea className="flex-1 px-6 py-4">
+              <div className="grid gap-4 pb-4">
+                <FormField
+                  name="ftype"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select follow-up type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {followUpOptions.length>0?followUpOptions.map((option:any,index:number) =>{
+
+                            return(
+                       
+                            
+                               <SelectItem key={option.id} value={option.id} className="hover:bg-gray-200 cursor-pointer">
+                              {option.ftype}
+                            </SelectItem>
+                          
+                            )
+                           
+                          } 
+                          ):<div>Loading...</div>}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  name="message"
+                  control={form.control}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <FloatingLabelInput label="Message (optional)" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </ScrollArea>
+            <DialogFooter className="px-6 py-4 border-t mt-auto">
+              <Button variant="outline" type="button" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Submitting..." : "Submit"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
 }

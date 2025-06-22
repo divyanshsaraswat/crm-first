@@ -296,16 +296,26 @@ const getColumnVisibilityFromLocalStorage = (): VisibilityState => {
               <div className={`flex items-center justify-center gap-1`} style={{ marginLeft: child && idx === 0 ? `${depthin * 12}px` : 0 }}>
                 {idx==0 && <Checkbox
                   className="w-4 h-4 mr-2 cursor-pointer"
-                  checked={select.includes(cell.getValue() as string)}
+                  checked={select.includes(row.original.id as string)}
                   onCheckedChange={(checked:boolean)=>{
-                    setselect(checked ? [...select, cell.getValue() as string] : select.filter(s => s !== cell.getValue()))
+                    setselect(checked ? [...select, row.original.id as string] : select.filter(s => s !== row.original.id))
                   }}
                 />}
               {idx==0?<Tooltip><TooltipTrigger><button className="cursor-pointer" onClick={()=>setIsOpen(!isOpen)}>{isOpen?<ChevronDown className="w-4 h-4"/>:<ChevronRight className="w-4 h-4"></ChevronRight>}</button></TooltipTrigger><TooltipContent>Open Tasks</TooltipContent></Tooltip>:""}
 
               {cell.column.id === 'status_type' 
                 ? statusbadges(cell.getValue() as string)
-                : flexRender(cell.column.columnDef.cell, cell.getContext())}
+                : cell.column.id === 'JoiningDate'
+                  ? new Date(cell.getValue() as string).toLocaleDateString("en-IN", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12:JSON.parse(localStorage.getItem('preferences') || '{}').time_format === '12h',
+                  timeZone: "Asia/Kolkata"
+                }) 
+                  : flexRender(cell.column.columnDef.cell, cell.getContext())}
 
 
               </div>
@@ -318,7 +328,7 @@ const getColumnVisibilityFromLocalStorage = (): VisibilityState => {
      <TableRow className="bg-gray-100 w-full">
         <TableCell colSpan={colSpan} className="border-2 p-5 pl-8">
 
-    <NestedTable did={row.original.id}/>
+    <NestedTable did={row.original}/>
         </TableCell>
         </TableRow>
 

@@ -239,16 +239,16 @@ const statusbadges = (line: string) => {
               <div className={`flex items-center gap-1`} style={{ marginLeft: child && idx === 0 ? `${depthin * 12}px` : 0 }}>
                 {idx==0 && <Checkbox
                   className="w-4 h-4 mr-2 cursor-pointer"
-                  checked={select.includes(cell.getValue() as string)}
+                  checked={select.includes(row.original.id as string)}
                   onCheckedChange={(checked:boolean)=>{
-                  setselect(checked ? [...select, cell.getValue() as string] : select.filter(s => s !== cell.getValue()))
+                  setselect(checked ? [...select, row.original.id as string] : select.filter(s => s !== row.original.id))
                   }}
                 />}
 
               {cell.column.id === "status" ? (
                 statusbadges(cell.getValue() as string)
               ) : cell.column.id === "due_date" ? (
-                new Date(cell.getValue() as string).toLocaleString("en-IN", {
+                new Date(cell.getValue() as string).toLocaleDateString("en-IN", {
                   year: "numeric",
                   month: "2-digit",
                   day: "2-digit",

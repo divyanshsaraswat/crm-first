@@ -4,6 +4,7 @@ import "./globals.css";
 import Sidebar from "@/components/sidebar";
 import { Toaster } from "@/components/ui/sonner"
 import ClientLayoutWrapper from "@/components/clientlayoutwrapper";
+import ParallaxOut from "@/components/scrollparticles";
 const notoSans = Noto_Sans({
   variable: "--font-noto-sans",
   subsets: ["latin"],
@@ -39,6 +40,7 @@ export default async function RootLayout({
         
       >
           <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
+          <ParallaxOut/>
           <Toaster/>
       </body>
     </html>

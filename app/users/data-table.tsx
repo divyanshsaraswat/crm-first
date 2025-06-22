@@ -195,12 +195,12 @@ export function DataTable<TData, TValue>({
               {idx == 0 && (
                 <Checkbox
                   className="w-4 h-4 cursor-pointer"
-                  checked={select.includes(cell.getValue() as string)}
+                  checked={select.includes(row.original.id as string)}
                   onCheckedChange={(checked: boolean) => {
                     setselect(
                       checked
-                        ? [...select, cell.getValue() as string]
-                        : select.filter((s) => s !== cell.getValue())
+                        ? [...select, row.original.id as string]
+                        : select.filter((s) => s !== row.original.id)
                     );
                   }}
                 />
