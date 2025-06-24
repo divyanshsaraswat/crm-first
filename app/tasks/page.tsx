@@ -19,10 +19,44 @@ import { Suspense, use, useEffect, useState } from "react";
 import { CrmUsersModal } from "@/components/forms";
 
 export default  function Tasks() {
-      const [data, setdata] = useState<Task[]>([])
+      const [dataone, setdataone] = useState<Task[]>([])
+      const [datatwo, setdatatwo] = useState<Task[]>([])
       const [loading, setloading] = useState<boolean>(false)
       const [typing, settyping] = useState<string>('')
-      const [view,setview] = useState(0)
+      const [view,setview] = useState<number>(0)
+      const fetchalltasks = async () => {
+          
+          const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/tasks/all`,{
+            credentials:'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Cookie': token
+            }
+          }).then(async(res)=>{
+            const result = await res.json()
+            setdatatwo(result?.message[0])
+            console.log("TaskTwo",result?.message[0])
+            setloading(true)
+        }).catch((e)=>{console.error(e)})
+        }
+
+        const fetchmytasks = async () => {
+          
+          const token = await fetch('/api/session').then((res:any)=>{return res?.token}).catch((e)=>console.error(e))
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/tasks/`,{
+            credentials:'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Cookie': token
+            }
+          }).then(async(res)=>{
+            const result = await res.json()
+            setdataone(result?.message[0])
+            console.log("TaskOne",result?.message[0])
+            setloading(true)
+        }).catch((e)=>{console.error(e)})
+        }
       useEffect(() => {
         const fetchData = async () => {
           
@@ -35,7 +69,8 @@ export default  function Tasks() {
             }
           }).then(async(res)=>{
             const result = await res.json()
-            setdata(result?.message[0])
+            setdataone(result?.message[0])
+            console.log("TaskOne",result?.message[0])
             setloading(true)
         }).catch((e)=>{console.error(e)})
         }
@@ -53,11 +88,16 @@ export default  function Tasks() {
                     </div>
                     <Card className="w-full mx-auto overflow-hidden bg-transparent shadow-none border-0">
                      <div className="flex flex-row gap-2"> 
-                    <Button variant={view==0?"default":"outline"} className="rounded-none" onClick={()=>setview(0)}>My Tasks</Button>
-                    <Button variant={view==1?"default":"outline"} className="rounded-none" onClick={()=>setview(1)}>All Tasks</Button>
+                    <Button variant={view==0?"default":"outline"} className="rounded-none" onClick={()=>{
+                      fetchmytasks();
+                      setview(0)}}>My Tasks</Button>
+                    <Button variant={view==1?"default":"outline"} className="rounded-none" onClick={()=>{
+                      fetchalltasks();
+                      setview(1);
+                      }}>All Tasks</Button>
                     </div>
-                     {loading && view==0 && <DataTable columns={columns} data={data}/>}
-                     {loading && view==1 && <DataTable columns={columns} data={data}/>}
+                     {loading && view==0 && <DataTable columns={columns} data={dataone}/>}
+                     {loading && view==1 && <DataTable columns={columns} data={datatwo}/>}
                      {!loading && <div className="flex flex-row items-center gap-2 justify-center h-64">
                         <Loader2 className="animate-spin h-5 w-5" />
                         <span className="text-gray-500">Loading...</span>
