@@ -286,8 +286,8 @@ const getColumnVisibilityFromLocalStorage = (): VisibilityState => {
       <TableRow
         key={row.id}
         data-state={row.getIsSelected() && "selected"}
-        className="border"
-   
+        className="border cursor-pointer"
+        onClick={()=>router.push(`/accounts/${row.original.id}`)}
 
       >
         

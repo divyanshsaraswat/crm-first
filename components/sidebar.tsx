@@ -108,7 +108,7 @@ function SidebarIn() {
          <motion.aside
         className={cn(
           "static h-full hidden md:block bg-transparent text-white transition-all duration-300 ease-in-out z-10 h-screen",
-          expanded || locked ? "w-64" : "w-16",
+          expanded || locked ? "w-84" : "w-16",
         )}
         initial={false}
         animate={{ width: expanded || locked ? 256 : 64 }}

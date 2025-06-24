@@ -41,7 +41,7 @@ export default function FollowUp({cdata,activehover}:{cdata:any,activehover:bool
                     return (
                        <Tooltip key={idx}>
                   <TooltipTrigger>
-                <button className="cursor-pointer hover:text-emerald-500" onClick={()=>setopenform(true)}>{setd[res?.ftype]?.icon}</button>
+                <button className="cursor-pointer hover:text-emerald-500" onClick={()=>setopenform(true)}>{setd[res?.ftype  as keyof typeof setd]?.icon}</button>
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>{res.ftype}</p>

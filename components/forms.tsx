@@ -113,7 +113,6 @@ const formUsersSchema = z.object({
 });
 const followUpSchema = z.object({
   id:z.string(),
-  fid:z.string(),
   ftype: z.string().min(1, 'Follow-up type is required'),
   message: z.string().optional(),
 });
@@ -2187,7 +2186,6 @@ export function CrmFollowUpModal(data:any) {
     resolver: zodResolver(followUpSchema),
     defaultValues: {
       id:data?.id,
-      fid:"",
       ftype: "",
       message: "",
     },
@@ -2198,7 +2196,7 @@ export function CrmFollowUpModal(data:any) {
     setLoading(true);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/followup/`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/followup/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -2207,7 +2205,11 @@ export function CrmFollowUpModal(data:any) {
       if (!res.ok) throw new Error("Failed to submit follow-up");
 
       toast("✅ Follow-up submitted successfully.");
+      console.log(await res.json())
       setOpen(false);
+      setTimeout(()=>{
+      window.location.reload();
+      },1500)
       form.reset();
     } catch (error) {
       toast.error("❌ Failed to submit follow-up.");
@@ -2229,7 +2231,8 @@ export function CrmFollowUpModal(data:any) {
                 }
               }).then(async(res)=>{
                 const result = await res.json()
-                setfollowUpOptions(result?.message)
+                setfollowUpOptions(result?.message[0])
+                console.log(result?.message[0])
                 
             }).catch((e)=>{console.error(e)})
             }
@@ -2260,7 +2263,7 @@ export function CrmFollowUpModal(data:any) {
                     <FormItem>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="w-full">
+                          <SelectTrigger className="w-full cursor-pointer">
                             <SelectValue placeholder="Select follow-up type" />
                           </SelectTrigger>
                         </FormControl>

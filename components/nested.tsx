@@ -1,3 +1,4 @@
+'use client'
 import { useEffect, useState } from "react";
 import { CrossIcon, Loader2, X,Check } from "lucide-react";
 import { Badge } from "./ui/badge";
