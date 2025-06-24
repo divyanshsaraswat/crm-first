@@ -182,7 +182,7 @@ export default function AccountPage({ params }: PageProps) {
                     <div>
                       <p className="text-sm font-medium">Website</p>
                       <a
-                        href= {data.website}
+                        href= {'https://'+data.website}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-sm text-blue-600 hover:underline"
