@@ -287,7 +287,7 @@ const getColumnVisibilityFromLocalStorage = (): VisibilityState => {
         key={row.id}
         data-state={row.getIsSelected() && "selected"}
         className="cursor-pointer"
-        onClick={()=>router.push(`/accounts/${row.original.id}`)}
+        // onClick={()=>router.push(`/accounts/${row.original.id}`)}
 
       >
         
