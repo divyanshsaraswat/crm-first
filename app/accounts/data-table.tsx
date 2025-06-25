@@ -286,7 +286,7 @@ const getColumnVisibilityFromLocalStorage = (): VisibilityState => {
       <TableRow
         key={row.id}
         data-state={row.getIsSelected() && "selected"}
-        className="border cursor-pointer"
+        className="cursor-pointer"
         onClick={()=>router.push(`/accounts/${row.original.id}`)}
 
       >
@@ -511,7 +511,7 @@ useEffect(() => {
                             </div>
 }
 
-      <Table className="bg-white dark:bg-inherit border">
+      <Table className="bg-white dark:bg-inherit border-none  rounded-lg">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
