@@ -42,7 +42,7 @@ interface ElementInfo {
   attributes: Record<string, string>;
 }
 
-export default function AgentChat() {
+function WebAgentChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -466,4 +466,15 @@ export default function AgentChat() {
       </button>
     </>
   );
+}
+
+export default function AgentChat(){
+  const pathname = usePathname();
+
+  const allowedPaths = ['accounts', 'tasks', 'reports', 'settings', 'users'];
+  const currentPath = pathname?.split('/')[1]; // get first path segment
+
+  if (!allowedPaths.includes(currentPath)) return null;
+
+  return <WebAgentChat />;
 }
