@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono,Noto_Sans } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/sidebar";
+import AgentChat from "@/components/agentchat";
 import { Toaster } from "@/components/ui/sonner"
 import ClientLayoutWrapper from "@/components/clientlayoutwrapper";
 import ParallaxOut from "@/components/scrollparticles";
@@ -39,7 +40,10 @@ export default async function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${notoSans.variable} antialiased w-screen flex overflow-x-hidden flex-row justify-between`}
         
       >
-          <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
+          <ClientLayoutWrapper>
+            {children}
+              <AgentChat />
+          </ClientLayoutWrapper>
           <ParallaxOut/>
           <Toaster/>
       </body>
