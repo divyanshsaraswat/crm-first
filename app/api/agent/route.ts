@@ -1,25 +1,23 @@
+// pages/api/agent/route.ts
+
 import { NextRequest } from "next/server";
 
+// All interfaces remain the same...
 interface DOMOperation {
-  type: 'click' | 'type' | 'scroll' | 'wait' | 'extract' | 'navigate';
-  selector?: string;
+  type: 'click' | 'type' | 'scroll' | 'wait' | 'navigate';
+  role?: string;
+  name?: string;
+  placeholder?: string;
   value?: string | number;
-  coordinates?: { x: number; y: number };
-  options?: any;
+  selector?: string;
 }
-
 interface ElementInfo {
   tagName: string;
-  id?: string;
-  className?: string;
   text?: string;
+  placeholder?: string;
+  name?: string; // Accessible name from label
   selector: string;
-  bounds: { x: number; y: number; width: number; height: number };
-  isVisible: boolean;
-  isInteractive: boolean;
-  attributes: Record<string, string>;
 }
-
 interface PageState {
   url: string;
   title: string;
@@ -27,21 +25,14 @@ interface PageState {
   viewport: { width: number; height: number };
   scrollPosition: { x: number; y: number };
 }
-
 interface AgentRequest {
   prompt: string;
   pageState?: PageState;
-  capabilities?: {
-    canClick: boolean;
-    canType: boolean;
-    canScroll: boolean;
-    canExtract: boolean;
-    canNavigate: boolean;
-    canWait: boolean;
-  };
+  capabilities?: any;
 }
 
-const chatHistory: { role: "user" | "assistant"; content: string }[] = [];
+// MODIFIED: Chat history is now commented out to disable it.
+// const chatHistory: { role: "user" | "assistant"; content: string }[] = [];
 
 function createWebAgentPrompt(userPrompt: string, pageState?: PageState): string {
   if (!pageState) {
@@ -49,49 +40,61 @@ function createWebAgentPrompt(userPrompt: string, pageState?: PageState): string
   }
 
   const interactiveElements = pageState.elements
-    .filter(el => el.isInteractive)
-    .slice(0, 15) // Limit to prevent context overflow
-    .map(el => ({
-      tag: el.tagName,
-      text: el.text?.substring(0, 50) || '',
-      selector: el.selector,
-      id: el.id,
-      className: el.className?.split(' ').slice(0, 2).join('.') || ''
-    }));
+    .slice(0, 30) 
+    .map(el => {
+      let description = `${el.tagName}`;
+      if (el.name) description += ` (Name: "${el.name}")`;
+      if (el.placeholder) description += ` (Placeholder: "${el.placeholder}")`;
+      if (el.text) description += `: "${el.text}"`;
+      return `- ${description}`;
+    }).join('\n');
 
-  const systemPrompt = `You are a web automation agent that can interact with web pages. You have access to the current page state and can perform DOM operations.
+  const systemPrompt = `You are a precise web automation agent.
 
-CURRENT PAGE:
+CURRENT PAGE CONTEXT:
 - URL: ${pageState.url}
 - Title: ${pageState.title}
-- Viewport: ${pageState.viewport.width}x${pageState.viewport.height}
-- Interactive Elements: ${interactiveElements.length}
+- Interactive Elements:
+${interactiveElements}
 
-KEY INTERACTIVE ELEMENTS:
-${interactiveElements.map(el => 
-  `- ${el.tag}: "${el.text}" (selector: ${el.selector}${el.id ? `, id: ${el.id}` : ''}${el.className ? `, class: ${el.className}` : ''})`
-).join('\n')}
+YOUR TASK:
+1.  Analyze the user's request and the page context.
+2.  Formulate a step-by-step plan in a "THINKING" block.
+3.  If you can confidently identify the target element, generate the necessary "OPERATION" command. The JSON inside the operation MUST contain all required fields.
+4.  If the context is ambiguous or the target element is missing a clear identifier, you MUST respond that you cannot perform the action.
 
-AVAILABLE OPERATIONS:
-You can respond with DOM operations by including them in your response using this EXACT format:
-OPERATION:{"type":"click","selector":"#button-id"}
-OPERATION:{"type":"type","selector":"input[name='email']","value":"text to type"}
-OPERATION:{"type":"scroll","coordinates":{"x":0,"y":500}}
-OPERATION:{"type":"wait","value":1000}
-OPERATION:{"type":"extract","selector":"a"}
-OPERATION:{"type":"navigate","value":"https://example.com"}
+**ABSOLUTE RULES:**
+- For 'click' operations, the JSON **MUST** include a "role" and a "name".
+- For 'type' operations, the JSON **MUST** include a "role", a "value", and either a "name" or a "placeholder".
 
-IMPORTANT RULES:
-1. Only use selectors that exist in the current page elements
-2. Be specific and accurate with selectors
-3. Explain what you're doing before providing operations
-4. If you can't find the right element, ask for clarification
-5. Operations should be on separate lines starting with "OPERATION:"
+GOOD EXAMPLE (Clicking a button):
+THINKING:
+1. The user wants to click the "Columns" button.
+2. I see an element in the context: "button: "Columns"".
+3. I will use the role 'button' and the name 'Columns'.
+END_THINKING
+I will click the "Columns" button for you.
+OPERATION:{"type":"click","role":"button","name":"Columns"}
+
+GOOD EXAMPLE (Typing in an input):
+THINKING:
+1. The user wants to type "laptops" in the search bar.
+2. I see an element: "input (Placeholder: "Search for products...")".
+3. I will use the role 'textbox' and the placeholder "Search for products...".
+END_THINKING
+I will search for "laptops" for you.
+OPERATION:{"type":"type","role":"textbox","placeholder":"Search for products...","value":"laptops"}
+
+BAD EXAMPLE (Ambiguous Target):
+THINKING:
+1. The user wants to click "the icon".
+2. The context has multiple icon buttons with no clear name. I cannot proceed.
+END_THINKING
+I see several icons, could you be more specific about which one to click?
 
 USER REQUEST: ${userPrompt}
 
-Analyze the page and provide helpful assistance with DOM operations when needed.`;
-
+Now, generate your response.`;
   return systemPrompt;
 }
 
@@ -121,17 +124,16 @@ export async function POST(req: NextRequest) {
   }
 
   const body: AgentRequest = await req.json();
-  const { prompt, pageState, capabilities } = body;
+  const { prompt, pageState } = body;
   
   if (!prompt || typeof prompt !== "string") {
     return new Response("Invalid prompt", { status: 400 });
   }
 
-  // Create enhanced prompt with page context
   const enhancedPrompt = createWebAgentPrompt(prompt, pageState);
   
-  // Add user message to history
-  chatHistory.push({ role: "user", content: enhancedPrompt });
+  // MODIFIED: This line is commented out to disable history.
+  // chatHistory.push({ role: "user", content: enhancedPrompt });
 
   const groqResponse = await fetch(
     "https://api.groq.com/openai/v1/chat/completions",
@@ -142,11 +144,12 @@ export async function POST(req: NextRequest) {
         Authorization: `Bearer ${groqApiKey}`,
       },
       body: JSON.stringify({
-        model: "meta-llama/llama-4-scout-17b-16e-instruct",
-        messages: chatHistory,
-        temperature: 0.3, // Lower temperature for more consistent operation parsing
+        model: "llama3-70b-8192",
+        // MODIFIED: The 'messages' payload now only sends the current prompt.
+        messages: [{ role: "user", content: enhancedPrompt }],
+        temperature: 0.1,
         stream: true,
-        max_tokens: 1000,
+        max_tokens: 6000,
       }),
     }
   );
@@ -159,13 +162,11 @@ export async function POST(req: NextRequest) {
 
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
-
   let fullResponse = "";
 
   const stream = new ReadableStream({
     async start(controller) {
       const reader = groqResponse.body!.getReader();
-
       try {
         while (true) {
           const { done, value } = await reader.read();
@@ -178,21 +179,23 @@ export async function POST(req: NextRequest) {
 
           for (const line of lines) {
             const data = line.replace(/^data:\s*/, "");
+            
             if (data === "[DONE]") {
-              // Process final response to extract operations
               const operations = extractOperationsFromResponse(fullResponse);
-              
-              // Send operations as separate chunks
               for (const operation of operations) {
                 controller.enqueue(encoder.encode(`\nOPERATION:${JSON.stringify(operation)}\n`));
               }
-              
-              // Add assistant response to history (without OPERATION lines)
               const cleanResponse = fullResponse.replace(/OPERATION:.*$/gm, '').trim();
-              chatHistory.push({ role: "assistant", content: cleanResponse });
+              
+              // MODIFIED: This line is commented out to disable history.
+              // chatHistory.push({ role: "assistant", content: cleanResponse });
               
               controller.close();
               return;
+            }
+            
+            if (!data) {
+                continue;
             }
 
             try {
@@ -200,25 +203,25 @@ export async function POST(req: NextRequest) {
               const token = json.choices?.[0]?.delta?.content;
               if (token) {
                 fullResponse += token;
-                // Don't stream OPERATION lines to the UI - they'll be processed separately
                 if (!token.includes('OPERATION:')) {
                   controller.enqueue(encoder.encode(token));
                 }
               }
             } catch (err) {
-              console.error("Parse error:", err);
+              console.error("Parse error on data chunk:", data, err);
             }
           }
         }
-
-        // Fallback in case [DONE] wasn't received
+        
         const operations = extractOperationsFromResponse(fullResponse);
         for (const operation of operations) {
-          controller.enqueue(encoder.encode(`\nOPERATION:${JSON.stringify(operation)}\n`));
+            controller.enqueue(encoder.encode(`\nOPERATION:${JSON.stringify(operation)}\n`));
         }
-        
         const cleanResponse = fullResponse.replace(/OPERATION:.*$/gm, '').trim();
-        chatHistory.push({ role: "assistant", content: cleanResponse });
+        
+        // MODIFIED: This line is commented out to disable history.
+        // chatHistory.push({ role: "assistant", content: cleanResponse });
+        
         controller.close();
       } catch (err) {
         console.error("Stream error:", err);
