@@ -1,9 +1,8 @@
-// components/WebAgentChat.tsx
-
 'use client';
 
 // Imports from Testing Library for robust, user-centric interactions
-import { findByRole, findByPlaceholderText, fireEvent, screen } from '@testing-library/dom';
+import userEvent from '@testing-library/user-event';
+import { findByRole, findByPlaceholderText, screen } from '@testing-library/dom';
 import React, { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { LucideMessageCircle, BrainCircuit, Mic } from 'lucide-react';
@@ -64,44 +63,43 @@ function WebAgentChat() {
   const [isExecuting, setIsExecuting] = useState(false);
   const pathname = usePathname();
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
 
-  // --- HELPER & EXECUTION FUNCTIONS ---
+  // --- HELPER FUNCTIONS ---
   const generateSelector = (element: Element): string => {
     if (element.id) {
-      const idSelector = `#${CSS.escape(element.id)}`;
-      if (document.querySelectorAll(idSelector).length === 1) return idSelector;
+        const idSelector = `#${CSS.escape(element.id)}`;
+        if (document.querySelectorAll(idSelector).length === 1) return idSelector;
     }
     const testId = element.getAttribute('data-testid') || element.getAttribute('data-cy');
     if (testId) {
-      const testIdSelector = `[data-testid="${CSS.escape(testId)}"]`;
-      if (document.querySelectorAll(testIdSelector).length === 1) return testIdSelector;
+        const testIdSelector = `[data-testid="${CSS.escape(testId)}"]`;
+        if (document.querySelectorAll(testIdSelector).length === 1) return testIdSelector;
     }
     const name = element.getAttribute('name');
     if (name) {
-      const nameSelector = `${element.tagName.toLowerCase()}[name="${CSS.escape(name)}"]`;
-      if (document.querySelectorAll(nameSelector).length === 1) return nameSelector;
+        const nameSelector = `${element.tagName.toLowerCase()}[name="${CSS.escape(name)}"]`;
+        if (document.querySelectorAll(nameSelector).length === 1) return nameSelector;
     }
     let path = [];
     let current: Element | null = element;
     while (current) {
-      let part = current.tagName.toLowerCase();
-      const parent = current.parentElement as any;
-      if (parent) {
-        const siblings = Array.from(parent.children).filter(
-          child => (child as Element).tagName === (current as Element).tagName
-        );
-        if (siblings.length > 1) {
-          const index = siblings.indexOf(current) + 1;
-          part += `:nth-of-type(${index})`;
+        let part = current.tagName.toLowerCase();
+        const parent = current.parentElement as any;
+        if (parent) {
+            const siblings = Array.from(parent.children).filter(
+                child => (child as Element).tagName === (current as Element).tagName
+            );
+            if (siblings.length > 1) {
+                const index = siblings.indexOf(current) + 1;
+                part += `:nth-of-type(${index})`;
+            }
         }
-      }
-      path.unshift(part);
-      const tempSelector = path.join(' > ');
-      if (document.querySelectorAll(tempSelector).length === 1) return tempSelector;
-      current = parent;
+        path.unshift(part);
+        const tempSelector = path.join(' > ');
+        if (document.querySelectorAll(tempSelector).length === 1) return tempSelector;
+        current = parent;
     }
     return path.join(' > ');
   };
@@ -114,13 +112,11 @@ function WebAgentChat() {
       const rect = el.getBoundingClientRect();
       const isVisible = rect.width > 0 && rect.height > 0 && window.getComputedStyle(el).visibility !== 'hidden';
       if (!isVisible) return;
-
       const elementInfo: ElementInfo = {
         tagName: el.tagName.toLowerCase(),
         text: el.textContent?.trim().substring(0, 100),
         selector: generateSelector(el),
       };
-
       if (el.tagName.toLowerCase() === 'input' || el.tagName.toLowerCase() === 'textarea') {
         const inputEl = el as HTMLInputElement | HTMLTextAreaElement;
         elementInfo.placeholder = inputEl.placeholder;
@@ -146,29 +142,22 @@ function WebAgentChat() {
     };
   };
 
+  // --- AUTOMATION STATE MACHINE LOGIC ---
+  const AUTOMATION_OPERATIONS_KEY = 'automation_operations';
+  const AUTOMATION_STEP_KEY = 'automation_step';
+  const AUTOMATION_GOAL_KEY = 'automation_goal';
+
   const executeDOMOperation = async (operation: DOMOperation): Promise<string> => {
     const container = document.body;
-  
     try {
       switch (operation.type) {
         case 'click': {
-          if (!operation.role || !operation.name) {
-            throw new Error("A 'role' and 'name' are required for click operations.");
-          }
-          let element: HTMLElement;
-          try {
-            element = await findByRole(container, operation.role, { name: new RegExp(operation.name, 'i') });
-          } catch (e) {
-            console.warn(`Fallback: Could not find by role, trying to find by text: "${operation.name}"`);
-            element = await screen.findByText(new RegExp(operation.name, 'i'));
-          }
-          if ((element as HTMLButtonElement).disabled) {
-            throw new Error(`Element is disabled.`);
-          }
-          fireEvent.click(element);
+          if (!operation.role || !operation.name) throw new Error("A 'role' and 'name' are required for click operations.");
+          const element = await findByRole(container, operation.role, { name: new RegExp(operation.name, 'i') });
+          if ((element as HTMLButtonElement).disabled) throw new Error(`Element is disabled.`);
+          await userEvent.click(element);
           return `✅ Clicked ${operation.role}: "${operation.name}"`;
         }
-  
         case 'type': {
           if (operation.value === undefined) throw new Error("A 'value' is required.");
           if (!operation.role) throw new Error("A 'role' is required.");
@@ -180,29 +169,26 @@ function WebAgentChat() {
           } else {
             throw new Error("A 'name' or 'placeholder' is required.");
           }
-          fireEvent.change(element, { target: { value: operation.value } });
+          await userEvent.clear(element);
+          await userEvent.type(element, operation.value.toString());
           return `✅ Typed into ${operation.role} (Name: "${operation.name || operation.placeholder}")`;
         }
-        
         case 'scroll': {
-          if (!operation.name) throw new Error("A 'name' (text content) is required for 'scroll'.");
-          const element = await screen.findByText(new RegExp(operation.name, 'i'));
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          return `✅ Scrolled to element with text: "${operation.name}"`;
+            if (!operation.name) throw new Error("A 'name' (text content) is required for 'scroll'.");
+            const element = await screen.findByText(new RegExp(operation.name, 'i'));
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return `✅ Scrolled to element with text: "${operation.name}"`;
         }
-  
         case 'wait': {
-          const delay = (operation.value as number) || 1000;
-          await new Promise(resolve => setTimeout(resolve, delay));
-          return `✅ Waited for ${delay}ms`;
+            const delay = (operation.value as number) || 1000;
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return `✅ Waited for ${delay}ms`;
         }
-  
         case 'navigate': {
-          if (!operation.value) throw new Error("A 'value' (URL) is required for 'navigate'.");
-          window.location.href = operation.value.toString();
-          return `✅ Navigating to ${operation.value}`;
+            if (!operation.value) throw new Error("A 'value' (URL) is required for 'navigate'.");
+            window.location.href = operation.value.toString();
+            return `✅ Navigating to ${operation.value}`;
         }
-  
         default:
           throw new Error(`Unknown operation type: ${(operation as any).type}`);
       }
@@ -215,34 +201,176 @@ function WebAgentChat() {
     }
   };
 
-  const executeOperations = async (operations: DOMOperation[]): Promise<string[]> => {
-    setIsExecuting(true); 
-    const results: string[] = [];
-    for (const operation of operations) {
-      const result = await executeDOMOperation(operation);
-      results.push(result);
-      if (result.startsWith('❌')) {
-          break; 
-      }
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
+  const cleanupAutomation = () => {
+    sessionStorage.removeItem(AUTOMATION_OPERATIONS_KEY);
+    sessionStorage.removeItem(AUTOMATION_STEP_KEY);
+    sessionStorage.removeItem(AUTOMATION_GOAL_KEY);
     setIsExecuting(false);
-    return results;
+  };
+
+  const continueAutomation = async () => {
+    if (!sessionStorage.getItem(AUTOMATION_OPERATIONS_KEY)) {
+      if (isExecuting) setIsExecuting(false);
+      return;
+    }
+
+    setIsExecuting(true);
+
+    while (sessionStorage.getItem(AUTOMATION_OPERATIONS_KEY)) {
+        const opsJson = sessionStorage.getItem(AUTOMATION_OPERATIONS_KEY);
+        const stepStr = sessionStorage.getItem(AUTOMATION_STEP_KEY);
+
+        if (!opsJson || !stepStr) {
+            cleanupAutomation();
+            break;
+        }
+
+        const operations: DOMOperation[] = JSON.parse(opsJson);
+        const currentStep = parseInt(stepStr, 10);
+
+        if (currentStep >= operations.length) {
+            setMessages(prev => [...prev, { id: Date.now(), sender: 'system', text: `🤖 Execution finished.` }]);
+            cleanupAutomation();
+            break;
+        }
+
+        const operation = operations[currentStep];
+        sessionStorage.setItem(AUTOMATION_STEP_KEY, (currentStep + 1).toString());
+        
+        const MAX_RETRIES = 3;
+        let finalResult = '';
+
+        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            // Before retrying, check if the user has cancelled the execution
+            if (!sessionStorage.getItem(AUTOMATION_OPERATIONS_KEY)) {
+                console.log("Automation cancelled during retry wait.");
+                return;
+            }
+            const result = await executeDOMOperation(operation);
+            finalResult = result;
+            if (result.startsWith('✅')) {
+                break;
+            }
+            if (attempt < MAX_RETRIES) {
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
+
+        setMessages(prev => [...prev, { id: Date.now(), sender: 'system', text: finalResult }]);
+
+        if (finalResult.startsWith('❌')) {
+            const originalGoal = sessionStorage.getItem(AUTOMATION_GOAL_KEY);
+            if (originalGoal) {
+                setMessages(prev => [...prev, { id: Date.now() + 1, sender: 'system', text: `🤖 Action failed. Attempting to create a new plan...` }]);
+                await fetchAndStartAgent(originalGoal, capturePageState());
+            } else {
+                setMessages(prev => [...prev, { id: Date.now() + 1, sender: 'system', text: `🤖 Execution stopped due to an error.` }]);
+                cleanupAutomation();
+            }
+            break; 
+        }
+
+        if (operation.type === 'navigate' || operation.type === 'click') {
+            break;
+        }
+    }
+  };
+
+  const startAutomation = (operations: DOMOperation[], goal: string) => {
+    if (!operations || operations.length === 0) return;
+    sessionStorage.setItem(AUTOMATION_OPERATIONS_KEY, JSON.stringify(operations));
+    sessionStorage.setItem(AUTOMATION_STEP_KEY, '0');
+    sessionStorage.setItem(AUTOMATION_GOAL_KEY, goal);
+    setMessages(prev => [...prev, {
+      id: Date.now(),
+      sender: 'system',
+      text: `🤖 Starting execution of ${operations.length} steps...`
+    }]);
+    continueAutomation();
+  };
+  
+  const fetchAndStartAgent = async (goal: string, state: PageState | null) => {
+    setLoading(true);
+    const botMessageId = Date.now();
+    setMessages(prev => [...prev, { id: botMessageId, sender: 'bot', text: '' }]);
+
+    try {
+      const res = await fetch('/api/agent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: goal, pageState: state }),
+      });
+
+      if (!res.ok || !res.body) throw new Error('Streaming failed');
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = '';
+      let finalOperations: DOMOperation[] = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        accumulated += decoder.decode(value, { stream: true });
+        
+        let currentText = accumulated;
+        let currentThought: string | undefined = undefined;
+        const thoughtRegex = /THINKING:\s*([\s\S]*?)\s*END_THINKING/;
+        const thoughtMatch = accumulated.match(thoughtRegex);
+
+        if (thoughtMatch && thoughtMatch[1]) {
+          currentThought = thoughtMatch[1].trim();
+          currentText = accumulated.replace(thoughtRegex, '').trim();
+        }
+        const cleanText = currentText.replace(/OPERATION:.*\n?/g, '');
+        setMessages(prev => prev.map(msg => msg.id === botMessageId ? { ...msg, text: cleanText, chainOfThought: currentThought } : msg));
+      }
+      
+      const lines = accumulated.split('\n');
+      for (const line of lines) {
+        if (line.startsWith('OPERATION:')) {
+          finalOperations.push(JSON.parse(line.substring(10)));
+        }
+      }
+
+      if (finalOperations.length > 0) {
+        startAutomation(finalOperations, goal);
+      } else {
+         setMessages(prev => prev.map(msg => msg.id === botMessageId ? { ...msg, text: "I'm not sure how to do that. Please be more specific." } : msg));
+      }
+    } catch (error) {
+      console.error("Agent fetch error:", error);
+      setMessages(prev => prev.map(msg => msg.id === botMessageId ? { ...msg, text: "Sorry, an error occurred." } : msg));
+    } finally {
+      setLoading(false);
+    }
   };
 
   // --- REACT HOOKS ---
   useEffect(() => {
     let debounceTimer: NodeJS.Timeout;
     const updatePageState = () => setPageState(capturePageState());
-    updatePageState();
     const observer = new MutationObserver(() => {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(updatePageState, 1000);
     });
-    observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+
+    const onPageReady = () => {
+      updatePageState();
+      observer.observe(document.body, { childList: true, subtree: true, attributes: true });
+      continueAutomation();
+    };
+
+    if (document.readyState === 'complete') {
+      onPageReady();
+    } else {
+      window.addEventListener('load', onPageReady);
+    }
+    
     return () => {
-        observer.disconnect();
-        clearTimeout(debounceTimer);
+      window.removeEventListener('load', onPageReady);
+      observer.disconnect();
+      clearTimeout(debounceTimer);
     };
   }, [pathname]);
 
@@ -256,18 +384,14 @@ function WebAgentChat() {
       console.warn("Speech recognition is not supported in this browser.");
       return;
     }
-
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.lang = 'en-US';
-
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = event.results[0][0].transcript;
       setInput(prevInput => prevInput + transcript);
     };
-
-    // UPDATED: This block now provides a user-friendly message for network errors.
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       console.error("Speech recognition error:", event.error);
       if (event.error === 'network') {
@@ -279,109 +403,44 @@ function WebAgentChat() {
       }
       setIsListening(false);
     };
-    
     recognition.onend = () => {
       setIsListening(false);
     };
-
     recognitionRef.current = recognition;
   }, []);
 
   // --- EVENT HANDLERS ---
   const handleSendMessage = async () => {
     const trimmedInput = input.trim();
-    if (!trimmedInput || loading) return;
+    if (!trimmedInput || loading || isExecuting) return;
 
     const userMessage: Message = { id: Date.now(), sender: 'user', text: trimmedInput };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
-    setLoading(true);
-
-    const botMessageId = Date.now() + 1;
-    setMessages(prev => [...prev, { id: botMessageId, sender: 'bot', text: '' }]);
-
-    try {
-      const res = await fetch('/api/agent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: trimmedInput, pageState }),
-      });
-
-      if (!res.ok || !res.body) throw new Error('Streaming failed');
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let accumulated = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        accumulated += decoder.decode(value, { stream: true });
-        let currentText = accumulated;
-        let currentThought: string | undefined = undefined;
-        const thoughtRegex = /THINKING:\s*([\s\S]*?)\s*END_THINKING/;
-        const thoughtMatch = accumulated.match(thoughtRegex);
-
-        if (thoughtMatch && thoughtMatch[1]) {
-          currentThought = thoughtMatch[1].trim();
-          currentText = accumulated.replace(thoughtRegex, '').trim();
-        }
-        const cleanText = currentText.replace(/OPERATION:.*\n?/g, '');
-        setMessages(prev =>
-          prev.map(msg =>
-            msg.id === botMessageId
-              ? { ...msg, text: cleanText, chainOfThought: currentThought }
-              : msg
-          )
-        );
-      }
-      
-      let finalOperations: DOMOperation[] = [];
-      try {
-        const lines = accumulated.split('\n');
-        for (const line of lines) {
-          if (line.startsWith('OPERATION:')) {
-            const opData = line.substring(10);
-            const operation = JSON.parse(opData);
-            finalOperations.push(operation);
-          }
-        }
-      } catch (e) {
-        console.error("Failed to parse final operations from response.", e);
-      }
-
-      if (finalOperations.length > 0) {
-        const executionResults = await executeOperations(finalOperations);
-        setMessages(prev => [
-          ...prev,
-          {
-            id: Date.now() + 2,
-            sender: 'system',
-            text: `🤖 Execution Summary:\n${executionResults.join('\n')}`
-          }
-        ]);
-        setTimeout(() => setPageState(capturePageState()), 1000);
-      }
-    } catch (error) {
-      console.error("Streaming error:", error);
-      setMessages(prev =>
-        prev.map(msg =>
-          msg.id === botMessageId
-            ? { ...msg, text: "Sorry, an error occurred. Please check the console." }
-            : msg
-        )
-      );
-    } finally {
-      setLoading(false);
-    }
+    
+    await fetchAndStartAgent(trimmedInput, pageState);
   };
-
+  
   const handleListen = () => {
     if (isListening) {
       recognitionRef.current?.stop();
     } else {
       recognitionRef.current?.start();
       setIsListening(true);
+    }
+  };
+
+  // NEW: Handler for the main floating button to allow stopping execution
+  const handleMainButtonClick = () => {
+    if (isExecuting) {
+      cleanupAutomation();
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        sender: 'system',
+        text: '🤖 Execution stopped by user.'
+      }]);
+    } else {
+      setIsOpen(!isOpen);
     }
   };
 
@@ -427,7 +486,7 @@ function WebAgentChat() {
                     <ThoughtBubble thought={msg.chainOfThought} />
                   )}
                   {(msg.text || msg.sender !== 'bot' || (loading && messages[messages.length - 1].id === msg.id)) && (
-                     <MessageBubble msg={msg} />
+                      <MessageBubble msg={msg} />
                   )}
                 </React.Fragment>
               ))}
@@ -460,7 +519,11 @@ function WebAgentChat() {
         </div>
       )}
 
-      <button onClick={() => setIsOpen(!isOpen)} className={`fixed bottom-4 right-4 z-[999] text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 transform hover:scale-110 ${isExecuting ? 'bg-orange-600 hover:bg-orange-700 animate-pulse' : 'bg-emerald-600 hover:bg-emerald-700'}`} aria-label="Toggle web agent">
+      <button 
+        onClick={handleMainButtonClick} 
+        className={`fixed bottom-4 right-4 z-[999] text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 transform hover:scale-110 ${isExecuting ? 'bg-orange-600 hover:bg-orange-700 animate-pulse' : 'bg-emerald-600 hover:bg-emerald-700'}`} 
+        aria-label={isExecuting ? "Stop execution" : "Toggle web agent"}
+      >
         {isExecuting ? (<div className="animate-spin h-7 w-7 border-2 border-white border-t-transparent rounded-full"></div>) : (<LucideMessageCircle />)}
       </button>
     </>
