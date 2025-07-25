@@ -462,7 +462,7 @@ function WebAgentChat() {
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 z-[998] flex items-center justify-center bg-black/80 md:items-end md:justify-end md:bg-transparent md:p-4 md:pointer-events-none">
+        <div className="fixed inset-0 z-[998] flex items-center justify-center bg-black/80 md:items-end md:justify-end md:bg-transparent md:p-4 md:pointer-events-none transition-all">
           <div className="w-11/12 max-h-[85vh] md:w-96 md:max-h-[70vh] md:mb-16 flex flex-col bg-white rounded-xl shadow-2xl transition-all duration-300 ease-in-out md:pointer-events-auto">
             <div className="flex items-center justify-between p-4 border-b bg-gray-50 rounded-t-xl">
               <div>
@@ -473,7 +473,7 @@ function WebAgentChat() {
               </div>
               <div className="flex items-center space-x-2">
                 {isExecuting && <div className="animate-spin h-4 w-4 border-2 border-emerald-500 border-t-transparent rounded-full"></div>}
-                <button onClick={() => setIsOpen(false)} className="text-gray-500 hover:text-gray-800" aria-label="Close chat">
+                <button onClick={() => setIsOpen(false)} className="text-gray-500 hover:text-gray-800 cursor-pointer" aria-label="Close chat">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
@@ -521,7 +521,7 @@ function WebAgentChat() {
 
       <button 
         onClick={handleMainButtonClick} 
-        className={`fixed bottom-4 right-4 z-[999] text-white w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 transform hover:scale-110 ${isExecuting ? 'bg-orange-600 hover:bg-orange-700 animate-pulse' : 'bg-emerald-600 hover:bg-emerald-700'}`} 
+        className={`fixed bottom-20 md:bottom-4 right-4 z-[999] text-white w-14 h-14 rounded-full flex items-center cursor-pointer justify-center shadow-lg transition-all duration-300 transform hover:scale-110 ${isExecuting ? 'bg-orange-600 hover:bg-orange-700 animate-pulse' : 'bg-emerald-600 hover:bg-emerald-700'}`} 
         aria-label={isExecuting ? "Stop execution" : "Toggle web agent"}
       >
         {isExecuting ? (<div className="animate-spin h-7 w-7 border-2 border-white border-t-transparent rounded-full"></div>) : (<LucideMessageCircle />)}
