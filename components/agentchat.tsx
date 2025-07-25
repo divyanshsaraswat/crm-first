@@ -88,9 +88,11 @@ function WebAgentChat() {
     let current: Element | null = element;
     while (current) {
       let part = current.tagName.toLowerCase();
-      const parent = current.parentElement;
+      const parent = current.parentElement as any;
       if (parent) {
-        const siblings = Array.from(parent.children).filter(child => child.tagName === current.tagName);
+        const siblings = Array.from(parent.children).filter(
+          child => (child as Element).tagName === (current as Element).tagName
+        );
         if (siblings.length > 1) {
           const index = siblings.indexOf(current) + 1;
           part += `:nth-of-type(${index})`;
