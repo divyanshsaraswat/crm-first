@@ -16,12 +16,16 @@ interface Message {
   chainOfThought?: string;
 }
 interface DOMOperation {
-  type: 'click' | 'type' | 'scroll' | 'wait' | 'navigate';
+  type: 'click' | 'type' | 'scroll' | 'wait' | 'navigate' | 'select';
   role?: string;
   name?: string;
   placeholder?: string;
   value?: string | number;
   selector?: string;
+  // Properties for the 'select' operation
+  method?: 'position' | 'content';
+  position?: 'first' | 'last';
+  count?: number;
 }
 interface PageState {
   url: string;
@@ -147,6 +151,17 @@ function WebAgentChat() {
   const AUTOMATION_STEP_KEY = 'automation_step';
   const AUTOMATION_GOAL_KEY = 'automation_goal';
 
+  const findCheckboxInElement = (element: Element): HTMLInputElement | null => {
+      if (element.tagName === 'INPUT' && (element as HTMLInputElement).type === 'checkbox') {
+          return element as HTMLInputElement;
+      }
+      for (const child of Array.from(element.children)) {
+          const found = findCheckboxInElement(child);
+          if (found) return found;
+      }
+      return null;
+  };
+
   const executeDOMOperation = async (operation: DOMOperation): Promise<string> => {
     const container = document.body;
     try {
@@ -189,6 +204,49 @@ function WebAgentChat() {
             window.location.href = operation.value.toString();
             return `✅ Navigating to ${operation.value}`;
         }
+        case 'select': {
+            const { method } = operation;
+            const allRows = Array.from(document.querySelectorAll('tr, [role="row"]'));
+            if (allRows.length === 0) throw new Error("No table rows found on the page.");
+
+            let rowsToProcess: Element[] = [];
+
+            if (method === 'content') {
+                const value = operation.value?.toString().toLowerCase();
+                if (!value) throw new Error("A 'value' is required for content-based selection.");
+                
+                const foundRow = allRows.find(row => row.textContent?.toLowerCase().includes(value));
+                if (foundRow) {
+                    rowsToProcess.push(foundRow);
+                } else {
+                    throw new Error(`Could not find a row containing "${operation.value}".`);
+                }
+            } else if (method === 'position') {
+                const { count = 1, position } = operation;
+                if (!position || (position !== 'first' && position !== 'last')) {
+                    throw new Error("A valid 'position' ('first' or 'last') is required.");
+                }
+                rowsToProcess = position === 'first' ? allRows.slice(0, count) : allRows.slice(-count);
+            } else {
+                throw new Error("A 'method' ('content' or 'position') is required for select.");
+            }
+
+            if (rowsToProcess.length === 0) throw new Error("No rows matched the selection criteria.");
+            
+            let selectedCount = 0;
+            for (const row of rowsToProcess) {
+                const firstCell = row.querySelector('td:first-child, [role="cell"]:first-child');
+                if (firstCell) {
+                    const checkbox = findCheckboxInElement(firstCell);
+                    if (checkbox) {
+                        await userEvent.click(checkbox);
+                        selectedCount++;
+                    }
+                }
+            }
+            if (selectedCount === 0) throw new Error("Found matching rows, but couldn't find a checkbox in their first cell.");
+            return `✅ Selected ${selectedCount} row(s).`;
+        }
         default:
           throw new Error(`Unknown operation type: ${(operation as any).type}`);
       }
@@ -197,7 +255,7 @@ function WebAgentChat() {
       if (error instanceof Error) {
         conciseErrorMessage = error.message.split('\n')[0];
       }
-      return `❌ Error on ${operation.type} for "${operation.name || ''}": ${conciseErrorMessage}`;
+      return `❌ Error on ${operation.type} for "${operation.name || operation.value || ''}": ${conciseErrorMessage}`;
     }
   };
 
@@ -241,7 +299,6 @@ function WebAgentChat() {
         let finalResult = '';
 
         for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-            // Before retrying, check if the user has cancelled the execution
             if (!sessionStorage.getItem(AUTOMATION_OPERATIONS_KEY)) {
                 console.log("Automation cancelled during retry wait.");
                 return;
@@ -270,7 +327,10 @@ function WebAgentChat() {
             break; 
         }
 
-        if (operation.type === 'navigate' || operation.type === 'click') {
+        // *** MODIFIED: Only break the loop for explicit navigation. ***
+        // This allows the agent to continue performing actions (like typing) 
+        // after a click that opens a modal on the same page.
+        if (operation.type === 'navigate') {
             break;
         }
     }
@@ -430,7 +490,6 @@ function WebAgentChat() {
     }
   };
 
-  // NEW: Handler for the main floating button to allow stopping execution
   const handleMainButtonClick = () => {
     if (isExecuting) {
       cleanupAutomation();

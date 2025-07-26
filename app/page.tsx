@@ -1,7 +1,4 @@
 "use client"
-
-import type React from "react"
-
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -31,123 +28,6 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-
-// Advanced Scroll Animation Hook
-function useScrollAnimation() {
-  const [scrollY, setScrollY] = useState(0)
-  const [scrollVelocity, setScrollVelocity] = useState(0)
-  const [scrollDirection, setScrollDirection] = useState<"up" | "down">("down")
-  const lastScrollY = useRef(0)
-  const lastTimestamp = useRef(0)
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY
-      const currentTime = Date.now()
-
-      // Calculate velocity
-      const deltaY = currentScrollY - lastScrollY.current
-      const deltaTime = currentTime - lastTimestamp.current
-      const velocity = deltaTime > 0 ? Math.abs(deltaY / deltaTime) : 0
-
-      setScrollY(currentScrollY)
-      setScrollVelocity(velocity)
-      setScrollDirection(deltaY > 0 ? "down" : "up")
-
-      lastScrollY.current = currentScrollY
-      lastTimestamp.current = currentTime
-    }
-
-    window.addEventListener("scroll", handleScroll, { passive: true })
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
-
-  return { scrollY, scrollVelocity, scrollDirection }
-}
-
-// Scroll Progress Hook
-function useScrollProgress() {
-  const [progress, setProgress] = useState(0)
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const totalHeight = document.documentElement.scrollHeight - window.innerHeight
-      const currentProgress = window.scrollY / totalHeight
-      setProgress(Math.min(Math.max(currentProgress, 0), 1))
-    }
-
-    window.addEventListener("scroll", handleScroll, { passive: true })
-    handleScroll()
-
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
-
-  return progress
-}
-
-// Parallax Element Component
-function ParallaxElement({
-  children,
-  speed = 0.5,
-  direction = "vertical",
-  className = "",
-}: {
-  children: React.ReactNode
-  speed?: number
-  direction?: "vertical" | "horizontal"
-  className?: string
-}) {
-  const [offset, setOffset] = useState(0)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!ref.current) return
-
-      const rect = ref.current.getBoundingClientRect()
-      const scrolled = window.scrollY
-      const rate = scrolled * speed
-
-      if (direction === "vertical") {
-        setOffset(rate)
-      } else {
-        setOffset(rate * 0.5)
-      }
-    }
-
-    window.addEventListener("scroll", handleScroll, { passive: true })
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [speed, direction])
-
-  return (
-    <div
-      ref={ref}
-      className={className}
-      style={{
-        transform: direction === "vertical" ? `translateY(${offset}px)` : `translateX(${offset}px)`,
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
-// Morphing Progress Bar
-function ScrollProgressBar() {
-  const progress = useScrollProgress()
-
-  return (
-    <div className="fixed top-0 left-0 w-full h-1 bg-slate-200 z-50">
-      <div
-        className="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 transition-all duration-300 ease-out"
-        style={{
-          width: `${progress * 100}%`,
-          boxShadow: `0 0 ${progress * 20}px rgba(16, 185, 129, 0.5)`,
-        }}
-      />
-    </div>
-  )
-}
 
 // Animated Counter Component with scroll trigger
 function AnimatedCounter({ end, duration = 2000, suffix = "" }: { end: number; duration?: number; suffix?: string }) {
@@ -208,79 +88,6 @@ function AnimatedCounter({ end, duration = 2000, suffix = "" }: { end: number; d
       {count}
       {suffix}
     </span>
-  )
-}
-
-// Scroll-Velocity Responsive Element
-function VelocityElement({ children }: { children: React.ReactNode }) {
-  const { scrollVelocity, scrollDirection } = useScrollAnimation()
-
-  return (
-    <div
-      className="transition-all duration-300 ease-out"
-      style={{
-        transform: `
-          scale(${1 + Math.min(scrollVelocity * 0.1, 0.1)})
-          skewY(${scrollDirection === "down" ? Math.min(scrollVelocity * 0.5, 2) : -Math.min(scrollVelocity * 0.5, 2)}deg)
-        `,
-        filter: `blur(${Math.min(scrollVelocity * 0.5, 1)}px)`,
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
-// Floating Particles System
-function ScrollParticles() {
-  const { scrollY, scrollVelocity } = useScrollAnimation()
-  const [particles, setParticles] = useState<
-    Array<{
-      id: number
-      x: number
-      y: number
-      size: number
-      opacity: number
-      speed: number
-    }>
-  >([])
-
-  useEffect(() => {
-    const generateParticles = () => {
-      const newParticles = Array.from({ length: 20 }, (_, i) => ({
-        id: i,
-        x: Math.random() * window.innerWidth,
-        y: Math.random() * window.innerHeight,
-        size: Math.random() * 4 + 1,
-        opacity: Math.random() * 0.5 + 0.1,
-        speed: Math.random() * 0.5 + 0.1,
-      }))
-      setParticles(newParticles)
-    }
-
-    generateParticles()
-    window.addEventListener("resize", generateParticles)
-    return () => window.removeEventListener("resize", generateParticles)
-  }, [])
-
-  return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden">
-      {particles.map((particle) => (
-        <div
-          key={particle.id}
-          className="absolute rounded-full bg-gradient-to-r from-emerald-400 to-teal-400"
-          style={{
-            left: particle.x,
-            top: particle.y - ((scrollY * particle.speed) % window.innerHeight),
-            width: particle.size,
-            height: particle.size,
-            opacity: particle.opacity * (1 + scrollVelocity * 0.1),
-            transform: `scale(${1 + scrollVelocity * 0.05})`,
-            transition: "all 0.3s ease-out",
-          }}
-        />
-      ))}
-    </div>
   )
 }
 
@@ -553,16 +360,20 @@ function InteractiveChatDemo() {
 
 export default function CRMLanding() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const { scrollY, scrollVelocity } = useScrollAnimation()
-  const router = useRouter();
+  const [scrollY, setScrollY] = useState(0)
+  const router = useRouter()
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY)
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white overflow-hidden">
-      {/* Scroll Progress Bar */}
-      <ScrollProgressBar />
-
-      {/* Floating Particles */}
-      <ScrollParticles />
-
       {/* Custom CSS for complex animations */}
       <style jsx global>{`
         @keyframes slideInUp {
@@ -610,25 +421,17 @@ export default function CRMLanding() {
         }
       `}</style>
 
-      {/* Enhanced Header with scroll effects */}
-      <header
-        className="fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-slate-200 z-50 transition-all duration-300"
-        style={{
-          transform: `translateY(${Math.min(scrollVelocity * -2, 0)}px)`,
-          boxShadow: scrollY > 100 ? "0 10px 30px rgba(0,0,0,0.1)" : "0 1px 3px rgba(0,0,0,0.1)",
-        }}
-      >
+      {/* Enhanced Header */}
+      <header className="fixed top-0 w-full bg-white/80 border-b border-slate-200 z-50 transition-all duration-300">
         <div className="container mx-auto px-4 lg:px-6 h-16 flex items-center justify-between">
-          <VelocityElement>
-            <div className="flex items-center space-x-2 group">
-              <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <BarChart3 className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-slate-900 group-hover:text-emerald-600 transition-colors duration-300">
-                ConvertCRM
-              </span>
+          <div className="flex items-center space-x-2 group">
+            <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <BarChart3 className="w-5 h-5 text-white" />
             </div>
-          </VelocityElement>
+            <span className="text-xl font-bold text-slate-900 group-hover:text-emerald-600 transition-colors duration-300">
+              ConvertCRM
+            </span>
+          </div>
 
           <nav className="hidden md:flex items-center space-x-8">
             {["Features", "Benefits", "Pricing", "Demo"].map((item, index) => (
@@ -650,16 +453,14 @@ export default function CRMLanding() {
             <Button
               variant="ghost"
               className="text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 transition-all duration-300"
-              onClick={()=>router.push('/login')}
+              onClick={() => router.push("/login")}
             >
               Sign In
             </Button>
-            <VelocityElement>
-              <Button className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 relative overflow-hidden group">
-                <span className="relative z-10">Start Free Trial</span>
-                <div className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></div>
-              </Button>
-            </VelocityElement>
+            <Button className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 relative overflow-hidden group">
+              <span className="relative z-10">Start Free Trial</span>
+              <div className="absolute inset-0 shimmer-effect opacity-0 group-hover:opacity-100"></div>
+            </Button>
           </div>
 
           <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
@@ -670,7 +471,7 @@ export default function CRMLanding() {
 
       {/* Mobile Navigation Menu */}
       {isMenuOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden">
+        <div className="fixed inset-0 bg-black/50 z-40 md:hidden">
           <div className="fixed top-16 left-0 right-0 bg-white border-b border-slate-200 shadow-xl">
             <nav className="container mx-auto px-4 py-6">
               <div className="flex flex-col space-y-4">
@@ -689,8 +490,9 @@ export default function CRMLanding() {
                     variant="ghost"
                     className="w-full text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 transition-all duration-300 justify-start"
                     onClick={() => {
-                      router.push('/login')
-                      setIsMenuOpen(false)}}
+                      router.push("/login")
+                      setIsMenuOpen(false)
+                    }}
                   >
                     Sign In
                   </Button>
@@ -707,66 +509,49 @@ export default function CRMLanding() {
         </div>
       )}
 
-      {/* Enhanced Hero Section with Parallax */}
+      {/* Enhanced Hero Section */}
       <section className="pt-24 pb-12 lg:pt-32 lg:pb-20 relative overflow-hidden">
-        {/* Parallax Background Elements */}
-        <ParallaxElement speed={0.2} className="absolute inset-0">
-          <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-emerald-400/20 to-teal-400/20 rounded-full blur-xl" />
-          <div className="absolute top-40 right-20 w-48 h-48 bg-gradient-to-r from-teal-400/20 to-cyan-400/20 rounded-full blur-xl" />
-          <div className="absolute bottom-40 left-1/4 w-40 h-40 bg-gradient-to-r from-cyan-400/20 to-emerald-400/20 rounded-full blur-xl" />
-        </ParallaxElement>
+        {/* Background Elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-emerald-400/20 to-teal-400/20 rounded-full" />
+          <div className="absolute top-40 right-20 w-48 h-48 bg-gradient-to-r from-teal-400/20 to-cyan-400/20 rounded-full" />
+          <div className="absolute bottom-40 left-1/4 w-40 h-40 bg-gradient-to-r from-cyan-400/20 to-emerald-400/20 rounded-full" />
+        </div>
 
         <div className="container mx-auto px-4 lg:px-6 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
-            {/* <ParallaxElement speed={0.1}>
-              <Badge className="mb-6 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-all duration-300 transform hover:scale-105 animate-morphBounce">
-                🚀 Trusted by 10,000+ businesses worldwide
-              </Badge>
-            </ParallaxElement> */}
-
-            <h1
-              className="text-4xl lg:text-6xl font-bold text-slate-900 mb-6 leading-tight"
-              style={{
-                transform: `translateY(${scrollY * 0.1}px)`,
-              }}
-            >
+            <h1 className="text-4xl lg:text-6xl font-bold text-slate-900 mb-6 leading-tight">
               Transform Leads Into
-              <ParallaxElement speed={0.05} className="inline-block">
-                <span className="bg-gradient-to-r from-emerald-500 to-teal-600 bg-clip-text text-transparent relative">
-                  {" "}
-                  Loyal Customers
-                  <div className="absolute -top-2 -right-2">
-                    <Sparkles className="w-8 h-8 text-emerald-500 animate-pulse" />
-                  </div>
-                </span>
-              </ParallaxElement>
+              <span className="bg-gradient-to-r from-emerald-500 to-teal-600 bg-clip-text text-transparent relative">
+                {" "}
+                Loyal Customers
+                <div className="absolute -top-2 -right-2">
+                  <Sparkles className="w-8 h-8 text-emerald-500 animate-pulse" />
+                </div>
+              </span>
             </h1>
 
-            <ParallaxElement speed={0.15}>
-              <p className="text-xl text-slate-600 mb-8 max-w-2xl mx-auto leading-relaxed">
-                Our intelligent CRM platform increases your conversion rates by up to 340% while reducing manual work by
-                75%. Stop losing potential customers and start growing your revenue.
-              </p>
-            </ParallaxElement>
+            <p className="text-xl text-slate-600 mb-8 max-w-2xl mx-auto leading-relaxed">
+              Our intelligent CRM platform increases your conversion rates by up to 340% while reducing manual work by
+              75%. Stop losing potential customers and start growing your revenue.
+            </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-              <VelocityElement>
-                <Button
-                  size="lg"
-                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-8 py-4 text-lg shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105 group relative overflow-hidden"
-                >
-                  <span className="relative z-10 flex items-center">
-                    Start Your Free Trial
-                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
-                  </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-teal-600 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                </Button>
-              </VelocityElement>
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-8 py-4 text-lg shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105 group relative overflow-hidden"
+              >
+                <span className="relative z-10 flex items-center">
+                  Start Your Free Trial
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-teal-600 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              </Button>
 
               <Button
                 variant="outline"
                 size="lg"
-                className="px-8 py-4 text-lg border-2 border-slate-300 hover:border-emerald-500 hover:text-emerald-600 transition-all duration-300 group relative overflow-hidden"
+                className="px-8 py-4 text-lg border-2 border-slate-300 hover:border-emerald-500 hover:text-emerald-600 transition-all duration-300 group relative overflow-hidden bg-transparent"
               >
                 <Play className="mr-2 w-5 h-5 group-hover:scale-125 transition-transform duration-300" />
                 <span className="relative z-10">Watch Demo</span>
@@ -774,31 +559,29 @@ export default function CRMLanding() {
               </Button>
             </div>
 
-            <ParallaxElement speed={0.2}>
-              <div className="text-sm text-slate-500 flex items-center justify-center space-x-4">
-                <span className="flex items-center">
-                  <CheckCircle className="w-4 h-4 text-emerald-500 mr-1" />
-                  No credit card required
-                </span>
-                <span className="flex items-center">
-                  <CheckCircle className="w-4 h-4 text-emerald-500 mr-1" />
-                  14-day free trial
-                </span>
-                <span className="flex items-center">
-                  <CheckCircle className="w-4 h-4 text-emerald-500 mr-1" />
-                  Cancel anytime
-                </span>
-              </div>
-            </ParallaxElement>
+            <div className="text-sm text-slate-500 flex items-center justify-center space-x-4">
+              <span className="flex items-center">
+                <CheckCircle className="w-4 h-4 text-emerald-500 mr-1" />
+                No credit card required
+              </span>
+              <span className="flex items-center">
+                <CheckCircle className="w-4 h-4 text-emerald-500 mr-1" />
+                14-day free trial
+              </span>
+              <span className="flex items-center">
+                <CheckCircle className="w-4 h-4 text-emerald-500 mr-1" />
+                Cancel anytime
+              </span>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Enhanced Stats Section */}
       <section className="py-12 bg-gradient-to-r from-emerald-50 to-teal-50 relative overflow-hidden">
-        <ParallaxElement speed={0.3} className="absolute inset-0">
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-emerald-100/30 to-teal-100/30" />
-        </ParallaxElement>
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-100/30 to-teal-100/30" />
+        </div>
 
         <div className="container mx-auto px-4 lg:px-6 relative z-10">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
@@ -810,7 +593,7 @@ export default function CRMLanding() {
             ].map((stat, index) => (
               <div
                 key={index}
-                className="text-center group hover:scale-110 transition-all duration-500 cursor-pointer bg-white/50 backdrop-blur-sm rounded-2xl p-6 shadow-lg"
+                className="text-center group hover:scale-110 transition-all duration-500 cursor-pointer bg-white/50 rounded-2xl p-6 shadow-lg"
               >
                 <div className="relative mb-4">
                   <div className="w-16 h-16 bg-white rounded-full shadow-lg flex items-center justify-center mx-auto group-hover:shadow-xl transition-shadow duration-300">
@@ -839,12 +622,10 @@ export default function CRMLanding() {
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-5xl font-bold text-slate-900 mb-6">
               Everything You Need to
-              <ParallaxElement speed={0.05} className="inline-block">
-                <span className="bg-gradient-to-r from-emerald-500 to-teal-600 bg-clip-text text-transparent">
-                  {" "}
-                  Convert More
-                </span>
-              </ParallaxElement>
+              <span className="bg-gradient-to-r from-emerald-500 to-teal-600 bg-clip-text text-transparent">
+                {" "}
+                Convert More
+              </span>
             </h2>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto">
               Our comprehensive CRM platform combines smart automation with proven conversion strategies
@@ -923,25 +704,22 @@ export default function CRMLanding() {
 
       {/* Interactive Chat Demo Section */}
       <section id="demo" className="py-20 bg-gradient-to-br from-slate-50 to-emerald-50 relative overflow-hidden">
-        <ParallaxElement speed={0.2} className="absolute inset-0">
+        <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-teal-50/50" />
-        </ParallaxElement>
+        </div>
 
         <div className="container mx-auto px-4 lg:px-6 relative z-10">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-5xl font-bold text-slate-900 mb-6">
               See ConvertCRM in Action
-              <VelocityElement>
-                <span className="inline-block ml-2">
-                  <MessageCircle className="w-12 h-12 text-emerald-500 animate-bounce" />
-                </span>
-              </VelocityElement>
+              <span className="inline-block ml-2">
+                <MessageCircle className="w-12 h-12 text-emerald-500 animate-bounce" />
+              </span>
             </h2>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto">
               Watch how our intelligent chat system transforms customer interactions and boosts satisfaction
             </p>
           </div>
-
           <InteractiveChatDemo />
         </div>
       </section>
@@ -968,7 +746,6 @@ export default function CRMLanding() {
                   <h3 className="text-2xl font-bold text-red-600 mb-2">Without ConvertCRM</h3>
                   <p className="text-slate-600">Traditional sales approach</p>
                 </div>
-
                 <div className="space-y-4">
                   {[
                     { label: "Lead Conversion Rate", value: "2.3%" },
@@ -1003,7 +780,6 @@ export default function CRMLanding() {
                   <h3 className="text-2xl font-bold text-emerald-600 mb-2">With ConvertCRM</h3>
                   <p className="text-slate-600">Smart sales optimization</p>
                 </div>
-
                 <div className="space-y-4">
                   {[
                     { label: "Lead Conversion Rate", value: "10.1%", improvement: "+340%" },
@@ -1031,24 +807,22 @@ export default function CRMLanding() {
           </div>
 
           <div className="text-center mt-12">
-            <VelocityElement>
-              <div className="inline-flex items-center bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-full text-lg font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 group cursor-pointer">
-                <TrendingUp className="mr-3 w-6 h-6 group-hover:scale-125 transition-transform duration-300" />
-                <span>Potential Additional Revenue: $1,500,000/year</span>
-                <Sparkles className="ml-3 w-6 h-6 animate-pulse" />
-              </div>
-            </VelocityElement>
+            <div className="inline-flex items-center bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-full text-lg font-bold shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 group cursor-pointer">
+              <TrendingUp className="mr-3 w-6 h-6 group-hover:scale-125 transition-transform duration-300" />
+              <span>Potential Additional Revenue: $1,500,000/year</span>
+              <Sparkles className="ml-3 w-6 h-6 animate-pulse" />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Enhanced CTA Section with Parallax */}
+      {/* Enhanced CTA Section */}
       <section className="py-20 bg-gradient-to-r from-emerald-500 to-teal-600 relative overflow-hidden">
-        <ParallaxElement speed={0.5} className="absolute inset-0">
+        <div className="absolute inset-0">
           <div className="absolute inset-0 bg-black/10"></div>
-          <div className="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full blur-xl" />
-          <div className="absolute bottom-10 right-10 w-32 h-32 bg-white/10 rounded-full blur-xl" />
-        </ParallaxElement>
+          <div className="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full" />
+          <div className="absolute bottom-10 right-10 w-32 h-32 bg-white/10 rounded-full" />
+        </div>
 
         <div className="container mx-auto px-4 lg:px-6 text-center relative z-10">
           <h2 className="text-3xl lg:text-5xl font-bold text-white mb-6">Ready to 3x Your Conversion Rate?</h2>
@@ -1058,18 +832,16 @@ export default function CRMLanding() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-            <VelocityElement>
-              <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-lg p-1 max-w-md w-full group hover:bg-white/30 transition-colors duration-300">
-                <Input
-                  type="email"
-                  placeholder="Enter your business email"
-                  className="border-0 bg-transparent text-white placeholder:text-emerald-100 focus:ring-0"
-                />
-                <Button className="bg-white text-emerald-600 hover:bg-emerald-50 font-bold px-6 ml-2 transform hover:scale-105 transition-all duration-300">
-                  Start Free Trial
-                </Button>
-              </div>
-            </VelocityElement>
+            <div className="flex items-center bg-white/20 rounded-lg p-1 max-w-md w-full group hover:bg-white/30 transition-colors duration-300">
+              <Input
+                type="email"
+                placeholder="Enter your business email"
+                className="border-0 bg-transparent text-white placeholder:text-emerald-100 focus:ring-0"
+              />
+              <Button className="bg-white text-emerald-600 hover:bg-emerald-50 font-bold px-6 ml-2 transform hover:scale-105 transition-all duration-300">
+                Start Free Trial
+              </Button>
+            </div>
           </div>
 
           <div className="text-emerald-100 text-sm flex items-center justify-center space-x-4">
@@ -1089,29 +861,27 @@ export default function CRMLanding() {
         </div>
       </section>
 
-      {/* Enhanced Footer with Scroll Effects */}
+      {/* Enhanced Footer */}
       <footer className="bg-slate-900 text-white py-12 relative overflow-hidden">
-        <ParallaxElement speed={0.1} className="absolute inset-0">
+        <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900"></div>
-        </ParallaxElement>
+        </div>
 
         <div className="container mx-auto px-4 lg:px-6 relative z-10">
           <div className="text-center">
-            <VelocityElement>
-              <div className="group cursor-pointer inline-block">
-                <div className="flex items-center justify-center space-x-4 mb-6 group-hover:scale-110 transition-all duration-500">
-                  <div className="w-16 h-16 bg-gradient-to-r from-emerald-500/20 to-teal-600/20 backdrop-blur-sm rounded-2xl flex items-center justify-center group-hover:bg-gradient-to-r group-hover:from-emerald-500/40 group-hover:to-teal-600/40 transition-all duration-500 border border-emerald-500/20 group-hover:border-emerald-500/40">
-                    <BarChart3 className="w-8 h-8 text-emerald-400 group-hover:text-emerald-300 transition-colors duration-300" />
-                  </div>
-                  <span className="text-4xl font-bold text-emerald-400/60 group-hover:text-emerald-300 transition-all duration-300">
-                    ConvertCRM
-                  </span>
+            <div className="group cursor-pointer inline-block">
+              <div className="flex items-center justify-center space-x-4 mb-6 group-hover:scale-110 transition-all duration-500">
+                <div className="w-16 h-16 bg-gradient-to-r from-emerald-500/20 to-teal-600/20 rounded-2xl flex items-center justify-center group-hover:bg-gradient-to-r group-hover:from-emerald-500/40 group-hover:to-teal-600/40 transition-all duration-500 border border-emerald-500/20 group-hover:border-emerald-500/40">
+                  <BarChart3 className="w-8 h-8 text-emerald-400 group-hover:text-emerald-300 transition-colors duration-300" />
                 </div>
-                <p className="text-slate-500 max-w-md mx-auto opacity-60 group-hover:opacity-80 transition-opacity duration-300">
-                  Transform your sales process with intelligent automation that actually converts.
-                </p>
+                <span className="text-4xl font-bold text-emerald-400/60 group-hover:text-emerald-300 transition-all duration-300">
+                  ConvertCRM
+                </span>
               </div>
-            </VelocityElement>
+              <p className="text-slate-500 max-w-md mx-auto opacity-60 group-hover:opacity-80 transition-opacity duration-300">
+                Transform your sales process with intelligent automation that actually converts.
+              </p>
+            </div>
           </div>
 
           <div className="border-t border-slate-800 mt-12 pt-8 text-center text-slate-400">
@@ -1126,9 +896,6 @@ export default function CRMLanding() {
           scrollY > 500 ? "scale-100 opacity-100" : "scale-0 opacity-0"
         }`}
         onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        style={{
-          transform: `scale(${scrollY > 500 ? 1 + scrollVelocity * 0.1 : 0}) rotate(${scrollY * 0.1}deg)`,
-        }}
       >
         <ArrowUp className="w-6 h-6 mx-auto" />
       </button>
