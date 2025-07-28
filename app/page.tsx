@@ -361,6 +361,8 @@ function InteractiveChatDemo() {
 export default function CRMLanding() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrollY, setScrollY] = useState(0)
+  const [emailed,setemailed] = useState(true)
+  const [email,setemail] = useState<string>('');
   const router = useRouter()
 
   useEffect(() => {
@@ -372,6 +374,22 @@ export default function CRMLanding() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  const sendEmail = async(e:any)=>{
+    e.preventDefault()
+   
+    const result = await fetch(`${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/users/mailtrial`, {
+      method: "POST",
+      credentials: "include",
+      body: JSON.stringify({email:email}),
+      headers: { "Content-Type": "application/json" },
+    })
+
+    if (result.ok) {
+     setemailed(false);
+    } else {
+      alert("Some error have occured. Try again!")
+    }
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white overflow-hidden">
       {/* Custom CSS for complex animations */}
@@ -422,7 +440,7 @@ export default function CRMLanding() {
       `}</style>
 
       {/* Enhanced Header */}
-      <header className="fixed top-0 w-full bg-white/80 border-b border-slate-200 z-50 transition-all duration-300">
+      <header className="fixed top-0 w-full bg-white/99 border-b border-slate-200 z-50 transition-all duration-300">
         <div className="container mx-auto px-4 lg:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-2 group">
             <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
@@ -831,18 +849,18 @@ export default function CRMLanding() {
             trial today - no credit card required.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+          {emailed &&  <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
             <div className="flex items-center bg-white/20 rounded-lg p-1 max-w-md w-full group hover:bg-white/30 transition-colors duration-300">
               <Input
                 type="email"
                 placeholder="Enter your business email"
                 className="border-0 bg-transparent text-white placeholder:text-emerald-100 focus:ring-0"
               />
-              <Button className="bg-white text-emerald-600 hover:bg-emerald-50 font-bold px-6 ml-2 transform hover:scale-105 transition-all duration-300">
+              <Button className="bg-white text-emerald-600 hover:bg-emerald-50 font-bold px-6 ml-2 transform hover:scale-105 transition-all duration-300" onClick={sendEmail}>
                 Start Free Trial
               </Button>
             </div>
-          </div>
+          </div> }
 
           <div className="text-emerald-100 text-sm flex items-center justify-center space-x-4">
             <span className="flex items-center">
