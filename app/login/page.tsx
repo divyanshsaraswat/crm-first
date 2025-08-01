@@ -1,7 +1,7 @@
 "use client"
 
 import { AlertCircle, LoaderIcon, BarChart3, Sparkles, Eye, EyeOff } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
@@ -27,7 +27,7 @@ function AnimatedInput({
   const [showPassword, setShowPassword] = useState(false)
   const [inputType, setInputType] = useState(type)
 
-  useState(() => {
+  useEffect(() => {
     if (showPasswordToggle) {
       setInputType(showPassword ? "text" : "password")
     }

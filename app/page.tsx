@@ -602,11 +602,10 @@ export default function CRMLanding() {
         </div>
 
         <div className="container mx-auto px-4 lg:px-6 relative z-10">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-8 px-8">
             {[
               { end: 340, suffix: "%", label: "Conversion Increase", icon: TrendingUp },
               { end: 75, suffix: "%", label: "Time Saved", icon: Clock },
-              { end: 2, suffix: "M+", label: "Revenue Generated", prefix: "$", icon: BarChart3 },
               { end: 98, suffix: "%", label: "Customer Satisfaction", icon: Heart },
             ].map((stat, index) => (
               <div
@@ -622,7 +621,7 @@ export default function CRMLanding() {
                   </div>
                 </div>
                 <div className="text-3xl lg:text-4xl font-bold text-emerald-600 mb-2">
-                  {stat.prefix}
+                  {/* {stat.prefix} */}
                   <AnimatedCounter end={stat.end} suffix={stat.suffix} />
                 </div>
                 <div className="text-slate-600 font-medium group-hover:text-emerald-700 transition-colors duration-300">
